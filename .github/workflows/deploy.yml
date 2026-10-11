@@ -18,6 +18,8 @@ concurrency:
 
 env:
   AWS_REGION: ap-south-1
+  # Not a secret: the role only trusts this repository's main branch (see deploy/aws/template.yaml).
+  AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN || 'arn:aws:iam::730335301258:role/store-GitHubDeployRole-ClVZUaFWGiJC' }}
   ECS_CLUSTER: store-Cluster-O85wbQUMEGVX
   ECS_SERVICE: store-Service-FPAjPY6xuMQZ
   API_REPO: store-apirepo-4ipvdbbpsmwg
@@ -40,17 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check the AWS role is configured
-        env:
-          ROLE: ${{ vars.AWS_ROLE_ARN }}
-        run: |
-          if [ -z "$ROLE" ]; then
-            echo "::error::Repository variable AWS_ROLE_ARN is not set. See deploy/aws/README.md, section GitHub Actions."; exit 1
-          fi
-
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - id: ecr

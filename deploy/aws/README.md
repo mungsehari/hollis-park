@@ -96,8 +96,8 @@ aws cloudformation describe-stacks --region ap-south-1 --stack-name store \
   --query "Stacks[0].Outputs[?OutputKey=='GitHubDeployRoleArn'].OutputValue" --output text
 ```
 
-3. In GitHub: repository -> Settings -> Secrets and variables -> Actions -> **Variables** -> New repository
-   variable `AWS_ROLE_ARN` = that ARN. Then push to `main`, or run the workflow from the Actions tab.
+3. Put that ARN in the `AWS_ROLE_ARN` value in `.github/workflows/deploy.yml` (or set a repository variable named
+   `AWS_ROLE_ARN`, which takes precedence). Then push to `main`, or run the workflow from the Actions tab.
 
 Only the `main` branch of that repository can assume the role, and it can only push the two images and roll this
 one service. The workflow has the cluster, service and repository names of this stack in its `env:` block; change
