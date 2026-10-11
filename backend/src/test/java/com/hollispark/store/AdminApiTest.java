@@ -139,8 +139,8 @@ class AdminApiTest {
                         .content("{\"email\":\"meera@example.com\",\"name\":\"Meera\",\"role\":\"STAFF\",\"password\":\"long-enough-pass\"}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.role").value("STAFF"));
         String list = mvc.perform(get("/api/admin/staff")).andReturn().getResponse().getContentAsString();
-        long adminId = 0;
-        for (var n : json.readTree(list)) if (n.get("email").asText().equals("admin@hollispark.local")) adminId = n.get("id").asLong();
+        String adminId = null;
+        for (var n : json.readTree(list)) if (n.get("email").asText().equals("admin@hollispark.local")) adminId = n.get("id").asText();
         mvc.perform(patch("/api/admin/staff/" + adminId).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
                 .andExpect(status().isConflict());
     }

@@ -4,3 +4,5 @@ store:
   bootstrap-admin:
     email: ${ADMIN_EMAIL:admin@hollispark.local}
     password: ${ADMIN_PASSWORD:local-admin-change-me}
+  rate-limit:
+    enabled: false          # local development and the test suite

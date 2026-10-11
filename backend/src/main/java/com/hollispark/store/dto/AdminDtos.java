@@ -19,6 +19,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 
 public final class AdminDtos {
@@ -35,33 +36,36 @@ public final class AdminDtos {
 
     public record PasswordChange(@NotBlank String current, @NotBlank @Size(min = 10, max = 200) String next) {}
 
-    public record Me(Long id, String email, String name, String role) {
+    public record Me(UUID id, String email, String name, String role) {
         public static Me of(StaffUser u) {
-            return new Me(u.id, u.email, u.name, u.role.name());
+            return new Me(u.getId(), u.getEmail(), u.getName(), u.getRole().name());
         }
     }
 
     /* ---------- orders ---------- */
-    public record OrderSummary(Long id, String orderNumber, String name, String email, String city, int items,
+    public record OrderSummary(UUID id, String orderNumber, String name, String email, String city, int items,
                                BigDecimal total, String status, String paymentStatus, String ship, Instant createdAt) {
         public static OrderSummary of(CustomerOrder o) {
-            int n = o.items == null ? 0 : o.items.stream().mapToInt(OrderLine::qty).sum();
-            return new OrderSummary(o.id, o.orderNumber, o.first + " " + o.last, o.email, o.city, n, o.total,
-                    o.status.name(), o.paymentStatus, o.ship, o.createdAt);
+            int n = o.getItems() == null ? 0 : o.getItems().stream().mapToInt(OrderLine::qty).sum();
+            return new OrderSummary(o.getId(), o.getOrderNumber(), o.getFirstName() + " " + o.getLastName(), o.getEmail(),
+                    o.getCity(), n, o.getTotal(), o.getStatus().name(), o.getPaymentStatus(), o.getShipMethod(),
+                    o.getCreatedAt());
         }
     }
 
-    public record OrderDetail(Long id, String orderNumber, String status, List<String> nextStatuses, String email,
+    public record OrderDetail(UUID id, String orderNumber, String status, List<String> nextStatuses, String email,
                               String first, String last, String address, String city, String pin, String ship,
                               String promo, BigDecimal subtotal, BigDecimal discount, BigDecimal shipping,
                               BigDecimal tax, BigDecimal total, String adminNote, List<OrderLine> items,
                               List<StatusEvent> history, Instant createdAt, Instant updatedAt,
                               String paymentStatus, String razorpayPaymentId, Instant paidAt) {
         public static OrderDetail of(CustomerOrder o) {
-            return new OrderDetail(o.id, o.orderNumber, o.status.name(),
-                    o.status.next().stream().map(Enum::name).sorted().toList(), o.email, o.first, o.last, o.address,
-                    o.city, o.pin, o.ship, o.promo, o.subtotal, o.discount, o.shipping, o.tax, o.total, o.adminNote,
-                    o.items, o.history, o.createdAt, o.updatedAt, o.paymentStatus, o.razorpayPaymentId, o.paidAt);
+            return new OrderDetail(o.getId(), o.getOrderNumber(), o.getStatus().name(),
+                    o.getStatus().next().stream().map(Enum::name).sorted().toList(), o.getEmail(), o.getFirstName(),
+                    o.getLastName(), o.getAddress(), o.getCity(), o.getPin(), o.getShipMethod(), o.getPromoCode(),
+                    o.getSubtotal(), o.getDiscount(), o.getShipping(), o.getTax(), o.getTotal(), o.getAdminNote(),
+                    o.getItems(), o.getHistory(), o.getCreatedAt(), o.getUpdatedAt(), o.getPaymentStatus(),
+                    o.getRazorpayPaymentId(), o.getPaidAt());
         }
     }
 
@@ -73,25 +77,27 @@ public final class AdminDtos {
     public record ActiveUpdate(@NotNull Boolean active) {}
 
     /* ---------- messages and subscribers ---------- */
-    public record MessageDto(Long id, String name, String email, String topic, String orderNumber, String slot,
+    public record MessageDto(UUID id, String name, String email, String topic, String orderNumber, String slot,
                              String message, String status, Instant createdAt) {
         public static MessageDto of(ContactMessage m) {
-            return new MessageDto(m.id, m.name, m.email, m.topic, m.orderNumber, m.slot, m.message, m.status, m.createdAt);
+            return new MessageDto(m.getId(), m.getName(), m.getEmail(), m.getTopic(), m.getOrderNumber(), m.getSlot(),
+                    m.getMessage(), m.getStatus(), m.getCreatedAt());
         }
     }
 
     public record MessageUpdate(@NotBlank @Pattern(regexp = "NEW|HANDLED") String status) {}
 
-    public record SubscriberDto(Long id, String email, List<String> topics, Instant createdAt) {
+    public record SubscriberDto(UUID id, String email, List<String> topics, Instant createdAt) {
         public static SubscriberDto of(Subscriber s) {
-            return new SubscriberDto(s.id, s.email, s.topics, s.createdAt);
+            return new SubscriberDto(s.getId(), s.getEmail(), s.getTopics(), s.getCreatedAt());
         }
     }
 
     /* ---------- staff ---------- */
-    public record StaffDto(Long id, String email, String name, String role, boolean active, Instant createdAt, Instant lastLoginAt) {
+    public record StaffDto(UUID id, String email, String name, String role, boolean active, Instant createdAt, Instant lastLoginAt) {
         public static StaffDto of(StaffUser u) {
-            return new StaffDto(u.id, u.email, u.name, u.role.name(), u.active, u.createdAt, u.lastLoginAt);
+            return new StaffDto(u.getId(), u.getEmail(), u.getName(), u.getRole().name(), u.isActive(), u.getCreatedAt(),
+                    u.getLastLoginAt());
         }
     }
 
@@ -113,7 +119,7 @@ public final class AdminDtos {
 
     public record PromoDto(String code, BigDecimal rate, boolean active, Instant createdAt) {
         public static PromoDto of(PromoCode p) {
-            return new PromoDto(p.code, p.rate, p.active, p.createdAt);
+            return new PromoDto(p.getCode(), p.getRate(), p.isActive(), p.getCreatedAt());
         }
     }
 

@@ -1,17 +1,10 @@
 package com.hollispark.store.web;
 
-import com.hollispark.store.config.StoreProperties;
-import com.hollispark.store.domain.ProductRepository;
-import com.hollispark.store.domain.ReviewRepository;
+import com.hollispark.store.dto.ContentDtos.CollectionDto;
 import com.hollispark.store.dto.ProductDto;
 import com.hollispark.store.dto.ReviewDto;
 import com.hollispark.store.service.ApiException;
-import com.hollispark.store.domain.CollectionRepository;
-import com.hollispark.store.dto.ContentDtos.CollectionDto;
-import com.hollispark.store.service.HomeContentService;
-import com.hollispark.store.service.SettingsService;
-import com.hollispark.store.service.StaticContent;
-import java.util.LinkedHashMap;
+import com.hollispark.store.service.StorefrontService;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -24,89 +17,37 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class CatalogController {
-    private final StoreProperties props;
-    private final StaticContent content;
-    private final ProductRepository products;
-    private final ReviewRepository reviews;
-    private final SettingsService settings;
-    private final CollectionRepository collections;
-    private final HomeContentService home;
+    private final StorefrontService storefront;
 
-    public CatalogController(StoreProperties props, StaticContent content, ProductRepository products,
-                             ReviewRepository reviews, SettingsService settings, CollectionRepository collections,
-                             HomeContentService home) {
-        this.props = props;
-        this.content = content;
-        this.products = products;
-        this.reviews = reviews;
-        this.settings = settings;
-        this.collections = collections;
-        this.home = home;
-    }
-
-    private List<CollectionDto> liveCollections() {
-        return collections.findAllByActiveTrueOrderBySortOrderAsc().stream().map(CollectionDto::of).toList();
+    public CatalogController(StorefrontService storefront) {
+        this.storefront = storefront;
     }
 
     /** Everything the storefront needs to boot, in one request. Promo codes are deliberately not included. */
     @GetMapping("/store")
     public Map<String, Object> store() {
-        Map<String, Object> site = new LinkedHashMap<>();
-        site.put("name", props.name());
-        site.put("store", props.storeName());
-        site.put("orderPrefix", props.orderPrefix());
-
-        SettingsService.Settings s = settings.get();
-        Map<String, Object> config = new LinkedHashMap<>();
-        config.put("locale", props.locale());
-        config.put("currency", props.currency());
-        config.put("taxMode", s.taxMode());
-        config.put("taxRate", s.taxRate());
-        config.put("taxName", s.taxName());
-        config.put("freeShipFrom", s.freeShipFrom());
-        config.put("shipFee", s.shipFee());
-        config.put("expressFee", s.expressFee());
-        config.put("sizeLabel", props.sizeLabel());
-        config.put("postcode", props.postcode());
-
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("site", site);
-        out.put("config", config);
-        out.put("payments", Map.of("enabled", props.razorpay().enabled(), "testMode", props.razorpay().testMode()));
-        out.put("home", home.get());
-        out.put("collections", liveCollections());
-        out.put("lines", content.lines);
-        out.put("faq", content.faq);
-        out.put("faqCats", content.faqCats);
-        out.put("sizeChart", content.sizeChart);
-        out.put("sizes", content.sizes);
-        out.put("colours", content.colours);
-        List<ProductDto> live = products.findAllByActiveTrueOrderByRankAsc().stream().map(ProductDto::of).toList();
-        var liveIds = live.stream().map(ProductDto::id).collect(java.util.stream.Collectors.toSet());
-        out.put("products", live);
-        out.put("reviews", reviews.findAllByOrderByIdAsc().stream().filter(r -> liveIds.contains(r.product)).map(ReviewDto::of).toList());
-        return out;
+        return storefront.snapshot().bootstrap();
     }
 
     @GetMapping("/products")
     public List<ProductDto> products() {
-        return products.findAllByActiveTrueOrderByRankAsc().stream().map(ProductDto::of).toList();
+        return storefront.snapshot().products();
     }
 
     @GetMapping("/products/{id}")
     public ProductDto product(@PathVariable String id) {
-        return products.findByIdAndActiveTrue(id).map(ProductDto::of)
+        return storefront.snapshot().products().stream().filter(p -> p.id().equals(id)).findFirst()
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Product not found."));
     }
 
     @GetMapping("/reviews")
     public List<ReviewDto> reviews(@RequestParam(required = false) String product) {
-        var list = product == null ? reviews.findAllByOrderByIdAsc() : reviews.findByProductOrderByIdAsc(product);
-        return list.stream().map(ReviewDto::of).toList();
+        var all = storefront.snapshot().reviews();
+        return product == null ? all : all.stream().filter(r -> r.product().equals(product)).toList();
     }
 
     @GetMapping("/collections")
     public List<CollectionDto> collections() {
-        return liveCollections();
+        return storefront.snapshot().collections();
     }
 }

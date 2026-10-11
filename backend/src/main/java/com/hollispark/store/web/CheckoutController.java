@@ -22,7 +22,6 @@ import com.hollispark.store.service.OrderService;
 import com.hollispark.store.service.SettingsService;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,7 +71,7 @@ public class CheckoutController {
     @PostMapping("/orders/{orderNumber}/payment")
     public PaymentResult confirmPayment(@PathVariable String orderNumber, @Valid @RequestBody PaymentConfirmation req) {
         var o = payments.verifyFromCheckout(orderNumber, req.razorpayOrderId(), req.razorpayPaymentId(), req.razorpaySignature());
-        return new PaymentResult(o.orderNumber, o.status.name(), o.paymentStatus);
+        return new PaymentResult(o.getOrderNumber(), o.getStatus().name(), o.getPaymentStatus());
     }
 
     @PostMapping("/contact")
@@ -81,16 +80,14 @@ public class CheckoutController {
         if ("order".equals(req.topic()) && (req.order() == null || !req.order().matches(props.orderPrefix() + "[0-9]{5}"))) {
             throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Order numbers look like " + props.orderPrefix() + "24817.");
         }
-        ContactMessage m = new ContactMessage();
-        m.name = req.name().trim();
-        m.email = req.email().trim().toLowerCase();
-        m.topic = req.topic();
-        m.orderNumber = req.order();
-        m.slot = req.slot();
-        m.message = req.message().trim();
-        m.status = "NEW";
-        m.createdAt = Instant.now();
-        contacts.save(m);
+        contacts.save(ContactMessage.builder()
+                .name(req.name().trim())
+                .email(req.email().trim().toLowerCase())
+                .topic(req.topic())
+                .orderNumber(req.order())
+                .slot(req.slot())
+                .message(req.message().trim())
+                .build());
         return new ContactResponse("received");
     }
 
@@ -98,12 +95,11 @@ public class CheckoutController {
     @ResponseStatus(HttpStatus.CREATED)
     public NewsletterResponse subscribe(@Valid @RequestBody NewsletterRequest req) {
         String email = req.email().trim().toLowerCase();
-        Subscriber s = subscribers.findByEmail(email).orElseGet(Subscriber::new);
-        s.email = email;
-        s.topics = req.topics() == null ? List.of() : req.topics();
-        if (s.createdAt == null) s.createdAt = Instant.now();
+        Subscriber s = subscribers.findByEmail(email).orElseGet(() -> Subscriber.builder().email(email).build());
+        s.setTopics(req.topics() == null ? List.of() : req.topics());
         subscribers.save(s);
         var first = promos.findFirstByActiveTrueOrderByCreatedAtAsc().orElse(null);
-        return new NewsletterResponse("subscribed", first == null ? null : first.code, first == null ? null : first.rate);
+        return new NewsletterResponse("subscribed", first == null ? null : first.getCode(),
+                first == null ? null : first.getRate());
     }
 }

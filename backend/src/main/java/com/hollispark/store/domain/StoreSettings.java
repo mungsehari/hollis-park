@@ -2,29 +2,32 @@ package com.hollispark.store.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-/** Single-row table (id = 1): tax and delivery settings edited in the admin panel. */
+/** Single-row table (the database allows only one row): tax and delivery settings edited in the admin panel. */
 @Entity
 @Table(name = "store_settings")
-public class StoreSettings {
-    @Id
-    public Integer id = 1;
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SuperBuilder
+public class StoreSettings extends BaseEntity {
     @Column(name = "tax_mode")
-    public String taxMode;
+    private String taxMode;
     @Column(name = "tax_rate")
-    public BigDecimal taxRate;
+    private BigDecimal taxRate;
     @Column(name = "tax_name")
-    public String taxName;
+    private String taxName;
     @Column(name = "free_ship_from")
-    public int freeShipFrom;
+    private int freeShipFrom;
     @Column(name = "ship_fee")
-    public int shipFee;
+    private int shipFee;
     @Column(name = "express_fee")
-    public int expressFee;
-    @Column(name = "updated_at")
-    public Instant updatedAt;
+    private int expressFee;
 }

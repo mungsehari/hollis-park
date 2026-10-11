@@ -61,6 +61,10 @@ public class SecurityConfig {
             .logout(l -> l.disable())
             .headers(h -> h
                 .frameOptions(f -> f.deny())
+                // The API only returns JSON and images: nothing it sends may load scripts or be framed.
+                .contentSecurityPolicy(c -> c.policyDirectives("default-src 'none'; frame-ancestors 'none'; base-uri 'none'"))
+                .httpStrictTransportSecurity(s -> s.includeSubDomains(true).maxAgeInSeconds(31536000))
+                .permissionsPolicyHeader(p -> p.policy("camera=(), microphone=(), geolocation=(), payment=()"))
                 .referrerPolicy(r -> r.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)));
         return http.build();
     }
@@ -84,7 +88,8 @@ public class SecurityConfig {
     @Bean
     UserDetailsService userDetailsService(StaffUserRepository staff) {
         return email -> staff.findByEmailIgnoreCase(email)
-                .map(u -> User.withUsername(u.email).password(u.passwordHash).roles(u.role.name()).disabled(!u.active).build())
+                .map(u -> User.withUsername(u.getEmail()).password(u.getPasswordHash()).roles(u.getRole().name())
+                        .disabled(!u.isActive()).build())
                 .orElseThrow(() -> new UsernameNotFoundException("Unknown user"));
     }
 

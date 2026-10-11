@@ -10,7 +10,6 @@ import com.hollispark.store.domain.SiteContentRepository;
 import com.hollispark.store.media.ImageTypes;
 import com.hollispark.store.media.MediaStorage;
 import java.io.IOException;
-import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.UUID;
@@ -63,16 +62,15 @@ public class MediaService {
         YearMonth ym = YearMonth.now(ZoneOffset.UTC);
         String key = String.format("uploads/%d/%02d/%s.%s", ym.getYear(), ym.getMonthValue(), UUID.randomUUID(), type.extension());
         storage.put(key, bytes, type.contentType());
-        Media m = new Media();
-        m.storageKey = key;
-        m.url = urlFor(key);
-        m.originalName = clean(file.getOriginalFilename());
-        m.contentType = type.contentType();
-        m.sizeBytes = bytes.length;
-        m.alt = alt == null || alt.isBlank() ? null : alt.trim();
-        m.createdAt = Instant.now();
-        m.createdBy = who;
-        return media.save(m);
+        return media.save(Media.builder()
+                .storageKey(key)
+                .url(urlFor(key))
+                .originalName(clean(file.getOriginalFilename()))
+                .contentType(type.contentType())
+                .sizeBytes(bytes.length)
+                .alt(alt == null || alt.isBlank() ? null : alt.trim())
+                .createdBy(who)
+                .build());
     }
 
     /** Stores a bundled placeholder image once and returns its URL. */
@@ -80,42 +78,41 @@ public class MediaService {
     public String seed(String fileName, byte[] bytes) {
         String key = "seed/" + fileName;
         return media.findByStorageKey(key).map(m -> {
-            if (!storage.exists(key)) storage.put(key, bytes, m.contentType);
-            return m.url;
+            if (!storage.exists(key)) storage.put(key, bytes, m.getContentType());
+            return m.getUrl();
         }).orElseGet(() -> {
             ImageTypes.Type type = ImageTypes.detect(bytes);
             String contentType = type == null ? "image/webp" : type.contentType();
             storage.put(key, bytes, contentType);
-            Media m = new Media();
-            m.storageKey = key;
-            m.url = urlFor(key);
-            m.originalName = fileName;
-            m.contentType = contentType;
-            m.sizeBytes = bytes.length;
-            m.createdAt = Instant.now();
-            m.createdBy = "seed";
-            return media.save(m).url;
+            return media.save(Media.builder()
+                    .storageKey(key)
+                    .url(urlFor(key))
+                    .originalName(fileName)
+                    .contentType(contentType)
+                    .sizeBytes(bytes.length)
+                    .createdBy("seed")
+                    .build()).getUrl();
         });
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Media m = media.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Image not found."));
-        if (inUse(m.url)) {
+        if (inUse(m.getUrl())) {
             throw new ApiException(HttpStatus.CONFLICT, "This image is used by a product, collection or the homepage. Replace it there first.");
         }
-        storage.delete(m.storageKey);
+        storage.delete(m.getStorageKey());
         media.delete(m);
     }
 
     public boolean inUse(String url) {
-        boolean product = products.findAll().stream().anyMatch(p -> url.equals(p.img) || url.equals(p.context)
-                || (p.gallery != null && p.gallery.contains(url)));
+        boolean product = products.findAll().stream().anyMatch(p -> url.equals(p.getImg()) || url.equals(p.getContextImg())
+                || (p.getGallery() != null && p.getGallery().contains(url)));
         if (product) return true;
-        if (collections.findAll().stream().anyMatch(c -> url.equals(c.image))) return true;
+        if (collections.findAll().stream().anyMatch(c -> url.equals(c.getImage()))) return true;
         return content.findAll().stream().anyMatch(c -> {
             try {
-                return mapper.writeValueAsString(c.data).contains("\"" + url + "\"");
+                return mapper.writeValueAsString(c.getData()).contains("\"" + url + "\"");
             } catch (Exception e) {
                 return false;
             }

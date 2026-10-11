@@ -9,11 +9,13 @@ import com.hollispark.store.dto.ContentDtos.CollectionDto;
 import com.hollispark.store.dto.ContentDtos.HomeContent;
 import com.hollispark.store.dto.ContentDtos.MediaDto;
 import com.hollispark.store.service.ApiException;
+import com.hollispark.store.service.StorefrontService;
 import com.hollispark.store.service.HomeContentService;
 import com.hollispark.store.service.MediaService;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -40,12 +42,15 @@ public class AdminContentController {
     private final MediaRepository mediaRepo;
     private final CollectionRepository collections;
     private final HomeContentService home;
+    private final StorefrontService storefront;
 
-    public AdminContentController(MediaService media, MediaRepository mediaRepo, CollectionRepository collections, HomeContentService home) {
+    public AdminContentController(MediaService media, MediaRepository mediaRepo, CollectionRepository collections,
+                                  HomeContentService home, StorefrontService storefront) {
         this.media = media;
         this.mediaRepo = mediaRepo;
         this.collections = collections;
         this.home = home;
+        this.storefront = storefront;
     }
 
     /* ---------- media library ---------- */
@@ -64,7 +69,7 @@ public class AdminContentController {
 
     @DeleteMapping("/media/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteMedia(@PathVariable Long id) {
+    public void deleteMedia(@PathVariable UUID id) {
         media.delete(id);
     }
 
@@ -85,12 +90,12 @@ public class AdminContentController {
     @Transactional
     public CollectionDto create(@Valid @RequestBody CollectionDto in) {
         if (in.id() == null || in.id().isBlank()) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Add a web address like 'hiking'.");
-        if (collections.existsById(in.id())) throw new ApiException(HttpStatus.CONFLICT, "A collection with this web address already exists.");
-        CollectionEntity c = new CollectionEntity();
-        c.id = in.id();
-        c.active = true;
+        if (collections.existsBySlug(in.id())) throw new ApiException(HttpStatus.CONFLICT, "A collection with this web address already exists.");
+        CollectionEntity c = CollectionEntity.builder().slug(in.id()).build();
         in.applyTo(c);
-        return CollectionDto.of(collections.save(c));
+        var saved = collections.saveAndFlush(c);
+        storefront.changed();
+        return CollectionDto.of(saved);
     }
 
     @PutMapping("/collections/{id}")
@@ -98,6 +103,8 @@ public class AdminContentController {
     public CollectionDto update(@PathVariable String id, @Valid @RequestBody CollectionDto in) {
         CollectionEntity c = find(id);
         in.applyTo(c);
+        collections.flush();
+        storefront.changed();
         return CollectionDto.of(c);
     }
 
@@ -105,7 +112,9 @@ public class AdminContentController {
     @Transactional
     public CollectionDto setActive(@PathVariable String id, @Valid @RequestBody ActiveUpdate in) {
         CollectionEntity c = find(id);
-        c.active = in.active();
+        c.setActive(in.active());
+        collections.flush();
+        storefront.changed();
         return CollectionDto.of(c);
     }
 
@@ -118,10 +127,12 @@ public class AdminContentController {
 
     @PutMapping("/home")
     public HomeContent saveHome(@Valid @RequestBody HomeContent in) {
-        return home.save(in);
+        var saved = home.save(in);
+        storefront.changed();
+        return saved;
     }
 
     private CollectionEntity find(String id) {
-        return collections.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Collection not found."));
+        return collections.findBySlug(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Collection not found."));
     }
 }

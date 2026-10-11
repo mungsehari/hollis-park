@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 public final class ContentDtos {
     private ContentDtos() {}
@@ -27,20 +28,20 @@ public final class ContentDtos {
             boolean active) {
 
         public static CollectionDto of(CollectionEntity c) {
-            return new CollectionDto(c.id, c.name, c.tagline, c.intro, c.image, c.alt,
-                    c.choose == null ? List.of() : c.choose, c.guide == null ? List.of() : c.guide, c.sortOrder, c.active);
+            return new CollectionDto(c.getSlug(), c.getName(), c.getTagline(), c.getIntro(), c.getImage(), c.getAlt(),
+                    c.getChoose() == null ? List.of() : c.getChoose(), c.getGuide() == null ? List.of() : c.getGuide(),
+                    c.getSortOrder(), c.isActive());
         }
 
         public void applyTo(CollectionEntity c) {
-            c.name = name.trim();
-            c.tagline = tagline;
-            c.intro = intro;
-            c.image = image;
-            c.alt = alt;
-            c.choose = choose == null ? List.of() : choose;
-            c.guide = guide == null ? List.of() : guide;
-            c.sortOrder = sortOrder;
-            c.updatedAt = Instant.now();
+            c.setName(name.trim());
+            c.setTagline(tagline);
+            c.setIntro(intro);
+            c.setImage(image);
+            c.setAlt(alt);
+            c.setChoose(choose == null ? List.of() : choose);
+            c.setGuide(guide == null ? List.of() : guide);
+            c.setSortOrder(sortOrder);
         }
     }
 
@@ -54,9 +55,10 @@ public final class ContentDtos {
         public record Banner(boolean enabled, @Size(max = 140) String text, @Size(max = 200) String link) {}
     }
 
-    public record MediaDto(Long id, String url, String originalName, String contentType, long sizeBytes, String alt, Instant createdAt) {
+    public record MediaDto(UUID id, String url, String originalName, String contentType, long sizeBytes, String alt, Instant createdAt) {
         public static MediaDto of(Media m) {
-            return new MediaDto(m.id, m.url, m.originalName, m.contentType, m.sizeBytes, m.alt, m.createdAt);
+            return new MediaDto(m.getId(), m.getUrl(), m.getOriginalName(), m.getContentType(), m.getSizeBytes(), m.getAlt(),
+                    m.getCreatedAt());
         }
     }
 }

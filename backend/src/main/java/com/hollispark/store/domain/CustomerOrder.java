@@ -4,62 +4,71 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "orders")
-public class CustomerOrder {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SuperBuilder
+public class CustomerOrder extends BaseEntity {
+    /** What the customer sees and quotes, e.g. HP-24817. The UUID id is internal. */
     @Column(name = "order_number", unique = true)
-    public String orderNumber;
-    public String email;
+    private String orderNumber;
+    private String email;
     @Column(name = "first_name")
-    public String first;
+    private String firstName;
     @Column(name = "last_name")
-    public String last;
-    public String address;
-    public String city;
-    public String pin;
+    private String lastName;
+    private String address;
+    private String city;
+    private String pin;
     @Column(name = "ship_method")
-    public String ship;
+    private String shipMethod;
     @Column(name = "promo_code")
-    public String promo;
-    public BigDecimal subtotal;
-    public BigDecimal discount;
-    public BigDecimal shipping;
-    public BigDecimal tax;
-    public BigDecimal total;
-    /** Payment is not integrated: new orders are RECEIVED and never charged. */
+    private String promoCode;
+    private BigDecimal subtotal;
+    private BigDecimal discount;
+    private BigDecimal shipping;
+    private BigDecimal tax;
+    private BigDecimal total;
     @Enumerated(EnumType.STRING)
-    public OrderStatus status;
+    private OrderStatus status;
     /** NONE (payments off), PENDING, PAID or FAILED. */
     @Column(name = "payment_status")
-    public String paymentStatus = "NONE";
+    @Builder.Default
+    private String paymentStatus = "NONE";
     @Column(name = "razorpay_order_id")
-    public String razorpayOrderId;
+    private String razorpayOrderId;
     @Column(name = "razorpay_payment_id")
-    public String razorpayPaymentId;
+    private String razorpayPaymentId;
     @Column(name = "paid_at")
-    public Instant paidAt;
+    private Instant paidAt;
     @Column(name = "admin_note")
-    public String adminNote;
+    private String adminNote;
     @JdbcTypeCode(SqlTypes.JSON)
-    public List<OrderLine> items;
+    private List<OrderLine> items;
     @JdbcTypeCode(SqlTypes.JSON)
-    public List<StatusEvent> history = new ArrayList<>();
-    @Column(name = "created_at")
-    public Instant createdAt;
-    @Column(name = "updated_at")
-    public Instant updatedAt;
+    @Builder.Default
+    private List<StatusEvent> history = new ArrayList<>();
+
+    /** Adds one entry to the order's history (the JSON column is replaced, so Hibernate sees the change). */
+    public void record(OrderStatus next, Instant at, String by, String note) {
+        List<StatusEvent> events = history == null ? new ArrayList<>() : new ArrayList<>(history);
+        events.add(new StatusEvent(next.name(), at, by, note));
+        history = events;
+    }
 }

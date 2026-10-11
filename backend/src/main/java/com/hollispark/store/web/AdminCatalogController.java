@@ -6,10 +6,10 @@ import com.hollispark.store.dto.AdminDtos.ActiveUpdate;
 import com.hollispark.store.dto.AdminDtos.ProductAdmin;
 import com.hollispark.store.dto.ProductDto;
 import com.hollispark.store.service.ApiException;
+import com.hollispark.store.service.StorefrontService;
 import com.hollispark.store.domain.CollectionRepository;
 import com.hollispark.store.service.StaticContent;
 import jakarta.validation.Valid;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,16 +33,19 @@ public class AdminCatalogController {
     private final ProductRepository products;
     private final StaticContent content;
     private final CollectionRepository collections;
+    private final StorefrontService storefront;
 
-    public AdminCatalogController(ProductRepository products, StaticContent content, CollectionRepository collections) {
+    public AdminCatalogController(ProductRepository products, StaticContent content, CollectionRepository collections,
+                                  StorefrontService storefront) {
         this.products = products;
         this.content = content;
         this.collections = collections;
+        this.storefront = storefront;
     }
 
     @GetMapping
     public List<ProductAdmin> list() {
-        return products.findAllByOrderByRankAsc().stream().map(AdminCatalogController::admin).toList();
+        return products.findAllByOrderBySortRankAsc().stream().map(AdminCatalogController::admin).toList();
     }
 
     @GetMapping("/{id}")
@@ -57,12 +60,12 @@ public class AdminCatalogController {
         if (in.id() == null || !in.id().matches("[a-z0-9]+(-[a-z0-9]+)*") || in.id().length() > 80) {
             throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Use a short web address like 'tide-two' (lowercase letters, digits and dashes).");
         }
-        if (products.existsById(in.id())) throw new ApiException(HttpStatus.CONFLICT, "A product with this web address already exists.");
+        if (products.existsBySlug(in.id())) throw new ApiException(HttpStatus.CONFLICT, "A product with this web address already exists.");
         validate(in);
         Product p = in.toEntity();
-        p.active = true;
-        p.updatedAt = Instant.now();
-        return admin(products.save(p));
+        var saved = products.saveAndFlush(p);
+        storefront.changed();
+        return admin(saved);
     }
 
     @PutMapping("/{id}")
@@ -70,26 +73,26 @@ public class AdminCatalogController {
     public ProductAdmin update(@PathVariable String id, @Valid @RequestBody ProductDto in) {
         Product existing = find(id);
         validate(in);
-        Product p = in.toEntity();
-        p.id = existing.id;
-        p.active = existing.active;
-        p.updatedAt = Instant.now();
-        return admin(products.save(p));
+        existing.copyFrom(in.toEntity());
+        var saved = products.saveAndFlush(existing);
+        storefront.changed();
+        return admin(saved);
     }
 
     @PatchMapping("/{id}")
     @Transactional
     public ProductAdmin setActive(@PathVariable String id, @Valid @RequestBody ActiveUpdate in) {
         Product p = find(id);
-        p.active = in.active();
-        p.updatedAt = Instant.now();
+        p.setActive(in.active());
+        products.flush();
+        storefront.changed();
         return admin(p);
     }
 
     private void validate(ProductDto in) {
         List<String> problems = new ArrayList<>();
         if (in.name() == null || in.name().isBlank()) problems.add("Add a name.");
-        if (in.collection() == null || !collections.existsById(in.collection())) problems.add("Choose one of the collections.");
+        if (in.collection() == null || !collections.existsBySlug(in.collection())) problems.add("Choose one of the collections.");
         if (in.price() <= 0) problems.add("The price must be more than zero.");
         if (in.wide() != null && in.wide().extra() < 0) problems.add("The Wide supplement cannot be negative.");
         if (in.rating() < 0 || in.rating() > 5) problems.add("Rating must be between 0 and 5.");
@@ -106,10 +109,10 @@ public class AdminCatalogController {
     }
 
     private Product find(String id) {
-        return products.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Product not found."));
+        return products.findBySlug(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Product not found."));
     }
 
     private static ProductAdmin admin(Product p) {
-        return new ProductAdmin(ProductDto.of(p), p.active, p.updatedAt);
+        return new ProductAdmin(ProductDto.of(p), p.isActive(), p.getUpdatedAt());
     }
 }

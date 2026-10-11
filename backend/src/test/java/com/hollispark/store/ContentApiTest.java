@@ -76,11 +76,11 @@ class ContentApiTest {
         mvc.perform(put("/api/admin/home").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(h.toString()))
                 .andExpect(status().isOk());
         mvc.perform(get("/api/store")).andExpect(jsonPath("$.home.hero.title").value("Run your own way."));
-        mvc.perform(delete("/api/admin/media/" + uploaded.get("id").asLong()).with(csrf())).andExpect(status().isConflict());
+        mvc.perform(delete("/api/admin/media/" + uploaded.get("id").asText()).with(csrf())).andExpect(status().isConflict());
 
         ((ObjectNode) h.get("hero")).put("image", oldImage);
         mvc.perform(put("/api/admin/home").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(h.toString())).andExpect(status().isOk());
-        mvc.perform(delete("/api/admin/media/" + uploaded.get("id").asLong()).with(csrf())).andExpect(status().isNoContent());
+        mvc.perform(delete("/api/admin/media/" + uploaded.get("id").asText()).with(csrf())).andExpect(status().isNoContent());
         mvc.perform(get(uploaded.get("url").asText())).andExpect(status().isNotFound());
     }
 

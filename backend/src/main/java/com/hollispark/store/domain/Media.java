@@ -2,30 +2,30 @@ package com.hollispark.store.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "media")
-public class Media {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SuperBuilder
+public class Media extends BaseEntity {
     @Column(name = "storage_key")
-    public String storageKey;
-    public String url;
+    private String storageKey;
+    private String url;
     @Column(name = "original_name")
-    public String originalName;
+    private String originalName;
     @Column(name = "content_type")
-    public String contentType;
+    private String contentType;
     @Column(name = "size_bytes")
-    public long sizeBytes;
-    public String alt;
-    @Column(name = "created_at")
-    public Instant createdAt;
+    private long sizeBytes;
+    private String alt;
     @Column(name = "created_by")
-    public String createdBy;
+    private String createdBy;
 }

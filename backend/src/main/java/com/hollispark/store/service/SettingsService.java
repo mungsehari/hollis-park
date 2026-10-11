@@ -1,5 +1,6 @@
 package com.hollispark.store.service;
 
+import com.hollispark.store.domain.PromoCode;
 import com.hollispark.store.domain.PromoCodeRepository;
 import com.hollispark.store.domain.StoreSettings;
 import com.hollispark.store.domain.StoreSettingsRepository;
@@ -33,7 +34,7 @@ public class SettingsService {
 
     public Settings get() {
         if (cached == null || Instant.now().isAfter(loadedAt.plus(TTL))) {
-            StoreSettings s = repo.findById(1)
+            StoreSettings s = repo.findFirstByOrderByCreatedAtAsc()
                     .orElseThrow(() -> new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Store settings are missing."));
             cached = of(s);
             loadedAt = Instant.now();
@@ -43,14 +44,13 @@ public class SettingsService {
 
     @Transactional
     public Settings update(Settings next) {
-        StoreSettings s = repo.findById(1).orElseGet(StoreSettings::new);
-        s.taxMode = next.taxMode();
-        s.taxRate = next.taxRate();
-        s.taxName = next.taxName().trim();
-        s.freeShipFrom = next.freeShipFrom();
-        s.shipFee = next.shipFee();
-        s.expressFee = next.expressFee();
-        s.updatedAt = Instant.now();
+        StoreSettings s = repo.findFirstByOrderByCreatedAtAsc().orElseGet(() -> StoreSettings.builder().build());
+        s.setTaxMode(next.taxMode());
+        s.setTaxRate(next.taxRate());
+        s.setTaxName(next.taxName().trim());
+        s.setFreeShipFrom(next.freeShipFrom());
+        s.setShipFee(next.shipFee());
+        s.setExpressFee(next.expressFee());
         repo.save(s);
         cached = of(s);
         loadedAt = Instant.now();
@@ -60,10 +60,11 @@ public class SettingsService {
     /** Active promo code rate, or null. Codes are matched case-insensitively. */
     public BigDecimal promoRate(String code) {
         if (code == null || code.isBlank()) return null;
-        return promos.findByCodeIgnoreCaseAndActiveTrue(code.trim()).map(p -> p.rate).orElse(null);
+        return promos.findByCodeIgnoreCaseAndActiveTrue(code.trim()).map(PromoCode::getRate).orElse(null);
     }
 
     private static Settings of(StoreSettings s) {
-        return new Settings(s.taxMode, s.taxRate, s.taxName, s.freeShipFrom, s.shipFee, s.expressFee);
+        return new Settings(s.getTaxMode(), s.getTaxRate(), s.getTaxName(), s.getFreeShipFrom(), s.getShipFee(),
+                s.getExpressFee());
     }
 }

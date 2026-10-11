@@ -6,10 +6,8 @@ import com.hollispark.store.config.StoreProperties;
 import com.hollispark.store.domain.CustomerOrder;
 import com.hollispark.store.domain.OrderRepository;
 import com.hollispark.store.domain.OrderStatus;
-import com.hollispark.store.domain.StatusEvent;
 import com.hollispark.store.service.ApiException;
 import java.time.Instant;
-import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -38,9 +36,9 @@ public class PaymentService {
     @Transactional
     public CustomerOrder verifyFromCheckout(String orderNumber, String razorpayOrderId, String paymentId, String signature) {
         if (!enabled()) throw new ApiException(HttpStatus.CONFLICT, "Online payment is not turned on.");
-        CustomerOrder o = orders.findByOrderNumber(orderNumber)
+        CustomerOrder o = orders.lockByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Order not found."));
-        if (o.razorpayOrderId == null || !o.razorpayOrderId.equals(razorpayOrderId)) {
+        if (o.getRazorpayOrderId() == null || !o.getRazorpayOrderId().equals(razorpayOrderId)) {
             throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "This payment does not belong to the order.");
         }
         if (!Signatures.validPayment(cfg.keySecret(), razorpayOrderId, paymentId, signature)) {
@@ -65,7 +63,7 @@ public class PaymentService {
             String rzpOrderId = payment.path("order_id").asText(root.at("/payload/order/entity/id").asText(null));
             String paymentId = payment.path("id").asText(null);
             if (rzpOrderId == null || paymentId == null) return;
-            orders.findByRazorpayOrderId(rzpOrderId).ifPresentOrElse(
+            orders.lockByRazorpayOrderId(rzpOrderId).ifPresentOrElse(
                     o -> markPaid(o, paymentId, "razorpay"),
                     () -> log.warn("Webhook for unknown Razorpay order {}", rzpOrderId));
         } catch (java.io.IOException e) {
@@ -74,16 +72,14 @@ public class PaymentService {
     }
 
     private void markPaid(CustomerOrder o, String paymentId, String by) {
-        if ("PAID".equals(o.paymentStatus)) return; // verify and webhook may both arrive
-        o.paymentStatus = "PAID";
-        o.razorpayPaymentId = paymentId;
-        o.paidAt = Instant.now();
-        if (o.status == OrderStatus.PENDING_PAYMENT) {
-            o.status = OrderStatus.RECEIVED;
-            var history = new ArrayList<>(o.history == null ? java.util.List.<StatusEvent>of() : o.history);
-            history.add(new StatusEvent(OrderStatus.RECEIVED.name(), o.paidAt, by, "Payment received " + paymentId));
-            o.history = history;
+        if ("PAID".equals(o.getPaymentStatus())) return; // verify and webhook may both arrive
+        Instant paidAt = Instant.now();
+        o.setPaymentStatus("PAID");
+        o.setRazorpayPaymentId(paymentId);
+        o.setPaidAt(paidAt);
+        if (o.getStatus() == OrderStatus.PENDING_PAYMENT) {
+            o.setStatus(OrderStatus.RECEIVED);
+            o.record(OrderStatus.RECEIVED, paidAt, by, "Payment received " + paymentId);
         }
-        o.updatedAt = o.paidAt;
     }
 }

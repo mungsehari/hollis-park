@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hollispark.store.domain.SiteContent;
 import com.hollispark.store.domain.SiteContentRepository;
 import com.hollispark.store.dto.ContentDtos.HomeContent;
-import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,22 +28,18 @@ public class HomeContentService {
     }
 
     public boolean exists() {
-        return repo.existsById(ID);
+        return repo.existsByPageKey(ID);
     }
 
     public HomeContent get() {
-        return repo.findById(ID).map(c -> mapper.convertValue(c.data, HomeContent.class)).orElseGet(() -> defaults(null));
+        return repo.findByPageKey(ID).map(c -> mapper.convertValue(c.getData(), HomeContent.class))
+                .orElseGet(() -> defaults(null));
     }
 
     @Transactional
     public HomeContent save(HomeContent home) {
-        SiteContent c = repo.findById(ID).orElseGet(() -> {
-            SiteContent n = new SiteContent();
-            n.id = ID;
-            return n;
-        });
-        c.data = mapper.valueToTree(home);
-        c.updatedAt = Instant.now();
+        SiteContent c = repo.findByPageKey(ID).orElseGet(() -> SiteContent.builder().pageKey(ID).build());
+        c.setData(mapper.valueToTree(home));
         repo.save(c);
         return home;
     }

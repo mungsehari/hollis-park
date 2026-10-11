@@ -8,8 +8,6 @@ import com.hollispark.store.domain.OrderStatus;
 import com.hollispark.store.domain.ProductRepository;
 import com.hollispark.store.domain.StatusEvent;
 import com.hollispark.store.domain.Product;
-import com.hollispark.store.domain.OrderRepository;
-import com.hollispark.store.domain.ProductRepository;
 import com.hollispark.store.dto.OrderRequest;
 import com.hollispark.store.dto.OrderRequest.Width;
 import com.hollispark.store.dto.OrderResponse;
@@ -62,70 +60,73 @@ public class OrderService {
             promo = req.promo().trim().toUpperCase();
         }
 
-        Map<String, Product> byId = products.findAllById(
+        Map<String, Product> bySlug = products.findAllBySlugIn(
                         req.items().stream().map(OrderRequest.Item::id).distinct().toList())
-                .stream().collect(Collectors.toMap(p -> p.id, Function.identity()));
+                .stream().collect(Collectors.toMap(Product::getSlug, Function.identity()));
 
         List<OrderLine> lines = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
         for (OrderRequest.Item item : req.items()) {
-            Product p = byId.get(item.id());
-            if (p == null || !p.active) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Unknown product: " + item.id());
+            Product p = bySlug.get(item.id());
+            if (p == null || !p.isActive()) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Unknown product: " + item.id());
             boolean wide = item.width() == Width.WIDE;
             if (!isKnownSize(item.size())) {
                 throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Unknown size: " + trim(item.size()));
             }
-            if (wide && p.wide == null) {
-                throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, p.name + " is not available in Wide.");
+            if (wide && p.getWide() == null) {
+                throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, p.getName() + " is not available in Wide.");
             }
             if (!p.inStock(item.size(), wide)) {
                 throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        p.name + " in " + props.sizeLabel() + " " + trim(item.size()) + (wide ? " Wide" : "") + " is sold out.");
+                        p.getName() + " in " + props.sizeLabel() + " " + trim(item.size()) + (wide ? " Wide" : "") + " is sold out.");
             }
             BigDecimal unit = BigDecimal.valueOf(p.unitPrice(wide));
             BigDecimal lineTotal = unit.multiply(BigDecimal.valueOf(item.qty()));
             subtotal = subtotal.add(lineTotal);
-            lines.add(new OrderLine(p.id, p.name, item.size(), wide ? "wide" : "standard", item.qty(), unit, lineTotal, p.img));
+            lines.add(new OrderLine(p.getSlug(), p.getName(), item.size(), wide ? "wide" : "standard", item.qty(),
+                    unit, lineTotal, p.getImg()));
         }
 
         PricingService.Quote q = pricing.quote(subtotal, req.ship(), rate);
 
-        CustomerOrder o = new CustomerOrder();
-        o.email = req.email().trim().toLowerCase();
-        o.first = req.first().trim();
-        o.last = req.last().trim();
-        o.address = req.address().trim();
-        o.city = req.city().trim();
-        o.pin = req.pin();
-        o.ship = req.ship().name().toLowerCase();
-        o.promo = promo;
-        o.subtotal = q.subtotal();
-        o.discount = q.discount();
-        o.shipping = q.shipping();
-        o.tax = q.tax();
-        o.total = q.total();
         boolean online = props.razorpay().enabled();
-        o.status = online ? OrderStatus.PENDING_PAYMENT : OrderStatus.RECEIVED;
-        o.paymentStatus = online ? "PENDING" : "NONE";
-        o.createdAt = Instant.now();
-        o.updatedAt = o.createdAt;
-        o.history = new ArrayList<>(List.of(new StatusEvent(o.status.name(), o.createdAt, "customer", null)));
-        o.items = lines;
-        orders.save(o);
-        o.orderNumber = props.orderPrefix() + String.format("%05d", ORDER_NUMBER_BASE + o.id);
+        OrderStatus status = online ? OrderStatus.PENDING_PAYMENT : OrderStatus.RECEIVED;
+        String orderNumber = props.orderPrefix() + String.format("%05d", orders.nextOrderNumber());
+
+        CustomerOrder order = CustomerOrder.builder()
+                .orderNumber(orderNumber)
+                .email(req.email().trim().toLowerCase())
+                .firstName(req.first().trim())
+                .lastName(req.last().trim())
+                .address(req.address().trim())
+                .city(req.city().trim())
+                .pin(req.pin())
+                .shipMethod(req.ship().name().toLowerCase())
+                .promoCode(promo)
+                .subtotal(q.subtotal())
+                .discount(q.discount())
+                .shipping(q.shipping())
+                .tax(q.tax())
+                .total(q.total())
+                .status(status)
+                .paymentStatus(online ? "PENDING" : "NONE")
+                .items(lines)
+                .history(new ArrayList<>(List.of(new StatusEvent(status.name(), Instant.now(), "customer", null))))
+                .build();
 
         OrderResponse.Payment payment = null;
         if (online) {
-            // Razorpay amounts are in paise. A failure here rolls the whole order back, so nothing is left half-made.
+            // Razorpay amounts are in paise. This happens before anything is saved, so a failure leaves no half-made order.
             long paise = q.total().movePointRight(2).longValueExact();
-            var rzp = razorpay.createOrder(paise, props.currency(), o.orderNumber);
-            o.razorpayOrderId = rzp.id();
+            var rzp = razorpay.createOrder(paise, props.currency(), orderNumber);
+            order.setRazorpayOrderId(rzp.id());
             payment = new OrderResponse.Payment(props.razorpay().keyId(), rzp.id(), rzp.amountPaise(), rzp.currency(),
                     props.razorpay().testMode());
         }
+        orders.save(order);
 
-        return new OrderResponse(o.orderNumber, o.status.name(), o.paymentStatus, q.subtotal(), q.discount(),
-                q.shipping(), q.tax(), q.total(), o.ship, payment);
+        return new OrderResponse(orderNumber, status.name(), order.getPaymentStatus(), q.subtotal(), q.discount(),
+                q.shipping(), q.tax(), q.total(), order.getShipMethod(), payment);
     }
 
     private boolean isKnownSize(double size) {

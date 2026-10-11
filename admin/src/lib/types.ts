@@ -1,12 +1,12 @@
 export type Role = "ADMIN" | "STAFF"
 export type OrderStatus = "PENDING_PAYMENT" | "RECEIVED" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED"
 
-export interface Me { id: number; email: string; name: string; role: Role }
+export interface Me { id: string; email: string; name: string; role: Role }
 
 export interface Page<T> { items: T[]; total: number; page: number; size: number }
 
 export interface OrderSummary {
-  id: number; orderNumber: string; name: string; email: string; city: string; items: number
+  id: string; orderNumber: string; name: string; email: string; city: string; items: number
   total: number; status: OrderStatus; paymentStatus?: string; ship: string; createdAt: string
 }
 
@@ -14,7 +14,7 @@ export interface OrderLine { productId: string; name: string; size: number; widt
 export interface StatusEvent { status: OrderStatus; at: string; by: string; note?: string }
 
 export interface OrderDetail {
-  id: number; orderNumber: string; status: OrderStatus; nextStatuses: OrderStatus[]
+  id: string; orderNumber: string; status: OrderStatus; nextStatuses: OrderStatus[]
   email: string; first: string; last: string; address: string; city: string; pin: string; ship: string; promo?: string
   subtotal: number; discount: number; shipping: number; tax: number; total: number
   adminNote?: string; items: OrderLine[]; history: StatusEvent[]; createdAt: string; updatedAt?: string
@@ -31,11 +31,11 @@ export interface Product {
 export interface ProductAdmin { product: Product; active: boolean; updatedAt?: string }
 
 export interface Message {
-  id: number; name: string; email: string; topic: string; orderNumber?: string; slot?: string
+  id: string; name: string; email: string; topic: string; orderNumber?: string; slot?: string
   message: string; status: "NEW" | "HANDLED"; createdAt: string
 }
-export interface Subscriber { id: number; email: string; topics: string[]; createdAt: string }
-export interface Staff { id: number; email: string; name: string; role: Role; active: boolean; createdAt: string; lastLoginAt?: string }
+export interface Subscriber { id: string; email: string; topics: string[]; createdAt: string }
+export interface Staff { id: string; email: string; name: string; role: Role; active: boolean; createdAt: string; lastLoginAt?: string }
 export interface Settings { taxMode: "included" | "added"; taxRate: number; taxName: string; freeShipFrom: number; shipFee: number; expressFee: number }
 export interface Promo { code: string; rate: number; active: boolean; createdAt: string }
 
@@ -55,7 +55,7 @@ export interface StoreInfo {
   colours: Record<string, { label: string; hex: string }>
 }
 
-export interface MediaItem { id: number; url: string; originalName?: string; contentType: string; sizeBytes: number; alt?: string; createdAt: string }
+export interface MediaItem { id: string; url: string; originalName?: string; contentType: string; sizeBytes: number; alt?: string; createdAt: string }
 
 export interface CollectionItem {
   id: string; name: string; tagline?: string; intro?: string; image?: string | null; alt?: string

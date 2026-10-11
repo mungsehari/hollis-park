@@ -14,23 +14,26 @@ public record ProductDto(
         FitNote fit, String care, List<Double> soldOut, List<Double> low, String keywords, List<String> gallery) {
 
     public static ProductDto of(Product p) {
-        return new ProductDto(p.id, p.name, p.collection, p.line, p.colourway, p.swatch, p.colours, p.price,
-                p.wide, p.rating, p.reviewCount, p.flag, p.rank, p.added, p.img, p.context, p.contextCaption,
-                p.alt, p.blurb, p.desc, p.specs, p.materials, p.fit, p.care, p.soldOut, p.low, p.keywords,
-                p.gallery == null || p.gallery.isEmpty() ? (p.img == null ? List.of() : List.of(p.img)) : p.gallery);
+        List<String> gallery = p.getGallery() == null || p.getGallery().isEmpty()
+                ? (p.getImg() == null ? List.<String>of() : List.of(p.getImg())) : p.getGallery();
+        return new ProductDto(p.getSlug(), p.getName(), p.getCollectionSlug(), p.getLineName(), p.getColourway(),
+                p.getSwatch(), p.getColours(), p.getPrice(), p.getWide(), p.getRating(), p.getReviewCount(),
+                p.getFlag(), p.getSortRank(), p.getAddedOn(), p.getImg(), p.getContextImg(), p.getContextCaption(),
+                p.getAlt(), p.getBlurb(), p.getDescription(), p.getSpecs(), p.getMaterials(), p.getFit(), p.getCare(),
+                p.getSoldOut(), p.getLow(), p.getKeywords(), gallery);
     }
 
     public Product toEntity() {
-        Product p = new Product();
-        p.id = id; p.name = name; p.collection = collection; p.line = line; p.colourway = colourway;
-        p.swatch = swatch; p.colours = colours; p.price = price; p.wide = wide; p.rating = rating;
-        p.reviewCount = reviews; p.flag = flag; p.rank = rank; p.added = added; p.img = img;
-        p.context = context; p.contextCaption = contextCaption; p.alt = alt; p.blurb = blurb; p.desc = desc;
-        p.specs = specs; p.materials = materials; p.fit = fit; p.care = care;
-        p.soldOut = soldOut == null ? List.of() : soldOut; p.low = low == null ? List.of() : low;
-        p.keywords = keywords;
-        p.gallery = gallery == null ? null : gallery.stream().filter(u -> u != null && !u.isBlank()).toList();
-        if (p.gallery != null && !p.gallery.isEmpty()) p.img = p.gallery.get(0);
-        return p;
+        List<String> photos = gallery == null ? null : gallery.stream().filter(u -> u != null && !u.isBlank()).toList();
+        return Product.builder()
+                .slug(id).name(name).collectionSlug(collection).lineName(line).colourway(colourway)
+                .swatch(swatch).colours(colours).price(price).wide(wide).rating(rating)
+                .reviewCount(reviews).flag(flag).sortRank(rank).addedOn(added)
+                .img(photos != null && !photos.isEmpty() ? photos.get(0) : img)
+                .contextImg(context).contextCaption(contextCaption).alt(alt).blurb(blurb).description(desc)
+                .specs(specs).materials(materials).fit(fit).care(care)
+                .soldOut(soldOut == null ? List.of() : soldOut).low(low == null ? List.of() : low)
+                .keywords(keywords).gallery(photos)
+                .build();
     }
 }

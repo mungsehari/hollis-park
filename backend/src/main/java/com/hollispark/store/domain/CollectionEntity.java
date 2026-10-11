@@ -2,31 +2,39 @@ package com.hollispark.store.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "collections")
-public class CollectionEntity {
-    @Id
-    public String id;
-    public String name;
-    public String tagline;
-    public String intro;
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SuperBuilder
+public class CollectionEntity extends BaseEntity {
+    /** Web address, e.g. "running". */
+    @Column(nullable = false, unique = true, updatable = false)
+    private String slug;
+    private String name;
+    private String tagline;
+    private String intro;
     /** Photo URL (an uploaded image). */
-    public String image;
-    public String alt;
+    private String image;
+    private String alt;
     @JdbcTypeCode(SqlTypes.JSON)
-    public List<String> choose;
+    private List<String> choose;
     @JdbcTypeCode(SqlTypes.JSON)
-    public List<GuideItem> guide;
+    private List<GuideItem> guide;
     @Column(name = "sort_order")
-    public int sortOrder;
-    public boolean active = true;
-    @Column(name = "updated_at")
-    public Instant updatedAt;
+    private int sortOrder;
+    @Builder.Default
+    private boolean active = true;
 }

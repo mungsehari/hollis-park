@@ -7,10 +7,33 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5439/hollis_park}
     username: ${DB_USERNAME:hollis}
     password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      minimum-idle: 2
+      connection-timeout: 5000          # fail fast instead of hanging a request for 30 s
+      max-lifetime: 1500000             # recycle before RDS / network idle limits (25 min)
+      keepalive-time: 300000
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate      # the schema is owned by Flyway (src/main/resources/db/migration)
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+          time_zone: UTC
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 32
+        query:
+          in_clause_parameter_padding: true
+  cache:
+    type: caffeine
+    cache-names: storefront
+    caffeine:
+      spec: maximumSize=10,expireAfterWrite=60s   # admin edits clear it at once; this is only the safety net
+  lifecycle:
+    timeout-per-shutdown-phase: 25s              # ECS waits 30 s before killing the task
   flyway:
     enabled: true
   session:
@@ -26,6 +49,16 @@ spring:
 server:
   port: 8080
   shutdown: graceful
+  compression:
+    enabled: true
+    min-response-size: 1KB
+    mime-types: application/json,text/csv,text/plain
+  max-http-request-header-size: 16KB
+  tomcat:
+    threads:
+      max: 100
+    connection-timeout: 10s
+    max-swallow-size: 10MB
   error:
     include-message: never
     include-stacktrace: never
@@ -46,6 +79,12 @@ management:
     health:
       probes:
         enabled: true
+      show-details: never
+      group:
+        liveness:
+          include: livenessState          # never depends on the database, so a DB blip does not restart the task
+        readiness:
+          include: readinessState,db
 
 # Storefront settings. Brand, market format and size rules are fixed here.
 # Tax, delivery fees and promo codes are only the first-start defaults:
@@ -77,6 +116,10 @@ store:
     password: ${ADMIN_PASSWORD:}
     name: ${ADMIN_NAME:Store owner}
   cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:5175}
+  # Per client address, in ten minutes: order form (the contact and newsletter forms get a third of it).
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    per-ten-minutes: ${RATE_LIMIT_ORDERS:30}
   # Razorpay payments. Leave the keys empty and checkout records the order without
   # taking payment. Use rzp_test_ keys for demo (test mode) and rzp_live_ for real money.
   razorpay:
@@ -91,3 +134,10 @@ store:
     bucket: ${MEDIA_BUCKET:}
     region: ${AWS_REGION:ap-south-1}
     public-base-url: ${MEDIA_BASE_URL:/media}
+
+logging:
+  pattern:
+    # The request id ties every line to one request (see RequestIdFilter and the X-Request-Id response header).
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{requestId:-}] %logger{36} - %msg%n"
+  level:
+    org.hibernate.orm.deprecation: warn

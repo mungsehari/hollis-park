@@ -2,18 +2,26 @@ package com.hollispark.store.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "promo_codes")
-public class PromoCode {
-    @Id
-    public String code;
-    public BigDecimal rate;
-    public boolean active = true;
-    @Column(name = "created_at")
-    public Instant createdAt;
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SuperBuilder
+public class PromoCode extends BaseEntity {
+    /** Always stored upper case. */
+    @Column(nullable = false, unique = true, updatable = false)
+    private String code;
+    private BigDecimal rate;
+    @Builder.Default
+    private boolean active = true;
 }

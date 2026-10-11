@@ -78,7 +78,7 @@ public class AuthController {
         contexts.saveContext(context, request, response);
 
         StaffUser u = staff.findByEmailIgnoreCase(email).orElseThrow();
-        u.lastLoginAt = Instant.now();
+        u.setLastLoginAt(Instant.now());
         return Me.of(u);
     }
 
@@ -92,7 +92,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public Me me(Principal principal) {
-        return staff.findByEmailIgnoreCase(principal.getName()).filter(u -> u.active).map(Me::of)
+        return staff.findByEmailIgnoreCase(principal.getName()).filter(StaffUser::isActive).map(Me::of)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Please sign in."));
     }
 
@@ -100,10 +100,10 @@ public class AuthController {
     @Transactional
     public Map<String, String> changePassword(@Valid @RequestBody PasswordChange req, Principal principal) {
         StaffUser u = staff.findByEmailIgnoreCase(principal.getName()).orElseThrow();
-        if (!encoder.matches(req.current(), u.passwordHash)) {
+        if (!encoder.matches(req.current(), u.getPasswordHash())) {
             throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Your current password is incorrect.");
         }
-        u.passwordHash = encoder.encode(req.next());
+        u.setPasswordHash(encoder.encode(req.next()));
         return Map.of("status", "changed");
     }
 }

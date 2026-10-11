@@ -11,15 +11,16 @@ import com.hollispark.store.domain.Product;
 import com.hollispark.store.domain.ProductRepository;
 import com.hollispark.store.domain.PromoCode;
 import com.hollispark.store.domain.PromoCodeRepository;
+import com.hollispark.store.domain.Review;
 import com.hollispark.store.domain.ReviewRepository;
 import com.hollispark.store.domain.StaffUser;
 import com.hollispark.store.domain.StaffUserRepository;
+import com.hollispark.store.domain.StoreSettings;
 import com.hollispark.store.domain.StoreSettingsRepository;
 import com.hollispark.store.dto.ProductDto;
 import com.hollispark.store.dto.ReviewDto;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -75,34 +76,40 @@ public class CatalogSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) throws IOException {
+        // Order matters: products point at collections, reviews point at products.
+        Map<String, String> images = seedImages();
+        if (collections.count() == 0) {
+            seedCollections(images);
+            collections.flush(); // the database checks the product -> collection link on insert
+        }
         if (products.count() == 0) {
             List<ProductDto> list = read("seed/products.json", new TypeReference<>() {});
-            products.saveAll(list.stream().map(ProductDto::toEntity).toList());
+            products.saveAllAndFlush(list.stream().map(ProductDto::toEntity).toList());
             log.info("Seeded {} products", list.size());
         }
         if (reviews.count() == 0) {
             List<ReviewDto> list = read("seed/reviews.json", new TypeReference<>() {});
-            reviews.saveAll(list.stream().map(ReviewDto::toEntity).toList());
+            List<Review> entities = new ArrayList<>();
+            for (ReviewDto dto : list) {
+                Review r = dto.toEntity();
+                r.setSortOrder(entities.size());
+                entities.add(r);
+            }
+            reviews.saveAll(entities);
             log.info("Seeded {} reviews", list.size());
         }
+        moveProductImagesToMedia(images);
         var d = props.defaults();
         if (settings.count() == 0) {
-            var s = new com.hollispark.store.domain.StoreSettings();
-            s.taxMode = d.taxMode(); s.taxRate = d.taxRate(); s.taxName = d.taxName();
-            s.freeShipFrom = d.freeShipFrom(); s.shipFee = d.shipFee(); s.expressFee = d.expressFee();
-            s.updatedAt = Instant.now();
-            settings.save(s);
+            settings.save(StoreSettings.builder()
+                    .taxMode(d.taxMode()).taxRate(d.taxRate()).taxName(d.taxName())
+                    .freeShipFrom(d.freeShipFrom()).shipFee(d.shipFee()).expressFee(d.expressFee())
+                    .build());
         }
         if (promos.count() == 0 && d.promoCodes() != null) {
-            d.promoCodes().forEach((code, rate) -> {
-                PromoCode p = new PromoCode();
-                p.code = code.toUpperCase(); p.rate = rate; p.active = true; p.createdAt = Instant.now();
-                promos.save(p);
-            });
+            d.promoCodes().forEach((code, rate) ->
+                    promos.save(PromoCode.builder().code(code.toUpperCase()).rate(rate).build()));
         }
-        Map<String, String> images = seedImages();
-        moveProductImagesToMedia(images);
-        if (collections.count() == 0) seedCollections(images);
         if (!home.exists()) home.save(HomeContentService.defaults(images.get("hero-portrait")));
         bootstrapAdmin();
     }
@@ -124,13 +131,16 @@ public class CatalogSeeder implements ApplicationRunner {
     private void moveProductImagesToMedia(Map<String, String> images) {
         for (Product p : products.findAll()) {
             boolean changed = false;
-            if (p.img != null && images.containsKey(p.img)) { p.img = images.get(p.img); changed = true; }
-            if (p.context != null && images.containsKey(p.context)) { p.context = images.get(p.context); changed = true; }
-            if (p.gallery == null || p.gallery.isEmpty()) {
+            if (p.getImg() != null && images.containsKey(p.getImg())) { p.setImg(images.get(p.getImg())); changed = true; }
+            if (p.getContextImg() != null && images.containsKey(p.getContextImg())) {
+                p.setContextImg(images.get(p.getContextImg()));
+                changed = true;
+            }
+            if (p.getGallery() == null || p.getGallery().isEmpty()) {
                 List<String> g = new ArrayList<>();
-                if (p.img != null) g.add(p.img);
-                if (p.context != null) g.add(p.context);
-                p.gallery = g;
+                if (p.getImg() != null) g.add(p.getImg());
+                if (p.getContextImg() != null) g.add(p.getContextImg());
+                p.setGallery(g);
                 changed = true;
             }
             if (changed) products.save(p);
@@ -141,19 +151,17 @@ public class CatalogSeeder implements ApplicationRunner {
         JsonNode list = read("seed/collections.json", new TypeReference<JsonNode>() {});
         int order = 0;
         for (JsonNode n : list) {
-            CollectionEntity c = new CollectionEntity();
-            c.id = n.get("id").asText();
-            c.name = n.get("name").asText();
-            c.tagline = n.path("tagline").asText(null);
-            c.intro = n.path("intro").asText(null);
-            c.image = images.getOrDefault(n.path("img").asText(), null);
-            c.alt = n.path("alt").asText(null);
-            c.choose = mapper.convertValue(n.path("choose"), new TypeReference<List<String>>() {});
-            c.guide = mapper.convertValue(n.path("guide"), new TypeReference<List<GuideItem>>() {});
-            c.sortOrder = order++;
-            c.active = true;
-            c.updatedAt = Instant.now();
-            collections.save(c);
+            collections.save(CollectionEntity.builder()
+                    .slug(n.get("id").asText())
+                    .name(n.get("name").asText())
+                    .tagline(n.path("tagline").asText(null))
+                    .intro(n.path("intro").asText(null))
+                    .image(images.getOrDefault(n.path("img").asText(), null))
+                    .alt(n.path("alt").asText(null))
+                    .choose(mapper.convertValue(n.path("choose"), new TypeReference<List<String>>() {}))
+                    .guide(mapper.convertValue(n.path("guide"), new TypeReference<List<GuideItem>>() {}))
+                    .sortOrder(order++)
+                    .build());
         }
         log.info("Seeded {} collections", list.size());
     }
@@ -169,15 +177,13 @@ public class CatalogSeeder implements ApplicationRunner {
             log.warn("ADMIN_PASSWORD must be at least 10 characters; the first admin was not created.");
             return;
         }
-        StaffUser u = new StaffUser();
-        u.email = b.email().trim().toLowerCase();
-        u.name = b.name() == null || b.name().isBlank() ? "Store owner" : b.name();
-        u.passwordHash = encoder.encode(b.password());
-        u.role = StaffUser.Role.ADMIN;
-        u.active = true;
-        u.createdAt = Instant.now();
-        staff.save(u);
-        log.info("Created the first admin account {}", u.email);
+        StaffUser u = staff.save(StaffUser.builder()
+                .email(b.email().trim().toLowerCase())
+                .name(b.name() == null || b.name().isBlank() ? "Store owner" : b.name())
+                .passwordHash(encoder.encode(b.password()))
+                .role(StaffUser.Role.ADMIN)
+                .build());
+        log.info("Created the first admin account {}", u.getEmail());
     }
 
     private <T> T read(String path, TypeReference<T> type) throws IOException {

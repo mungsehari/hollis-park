@@ -103,8 +103,12 @@ stock-checked on the server.
 
 ## Where things live
 
-- **Schema**: `backend/src/main/resources/db/migration` (Flyway; add `V3__...sql`
-  for every change, never edit an applied file).
+- **Schema**: `backend/src/main/resources/db/migration` (Flyway; add the next
+  `V<n>__...sql` for every change, never edit an applied file).
+- **Entities**: all extend `BaseEntity` (UUID id, `createdAt`, `updatedAt`, `version` for
+  optimistic locking). Fields are private with Lombok getters/setters and `@SuperBuilder`.
+  Things people type in URLs keep their own unique column: product / collection `slug`,
+  promo `code`, page `pageKey`; customers see order numbers (`HP-24817`), never UUIDs.
 - **First-start seed**: `backend/src/main/resources/seed/` (placeholder catalog,
   collections and the photos in `seed/images/`).
 - **Brand and market format**: `backend/src/main/resources/application.yml`.

@@ -10,4 +10,12 @@ server:
     session:
       cookie:
         secure: ${SESSION_COOKIE_SECURE:true}
-  forward-headers-strategy: framework
+  # Behind the load balancer and nginx: Tomcat itself reads X-Forwarded-For / -Proto from those private
+  # addresses, so request.getRemoteAddr() is the real visitor (rate limits) and cookies are marked secure.
+  forward-headers-strategy: native
+
+# One JSON object per log line (CloudWatch Logs Insights can filter on any field, incl. requestId).
+logging:
+  structured:
+    format:
+      console: ecs

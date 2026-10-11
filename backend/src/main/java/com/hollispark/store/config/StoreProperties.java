@@ -22,7 +22,11 @@ public record StoreProperties(
         BootstrapAdmin bootstrapAdmin,
         List<String> corsAllowedOrigins,
         Media media,
-        Razorpay razorpay) {
+        Razorpay razorpay,
+        RateLimit rateLimit) {
+
+    /** Requests allowed per client address in ten minutes on the order form; the other forms scale from it. */
+    public record RateLimit(boolean enabled, int perTenMinutes) {}
 
     public record Postcode(String label, String pattern, String hint, boolean numeric) {}
 

@@ -50,7 +50,7 @@ public class AdminOrdersController {
                 where.add(cb.or(
                         cb.like(cb.lower(root.get("orderNumber")), like),
                         cb.like(cb.lower(root.get("email")), like),
-                        cb.like(cb.lower(cb.concat(cb.concat(root.get("first"), " "), root.get("last"))), like),
+                        cb.like(cb.lower(cb.concat(cb.concat(root.get("firstName"), " "), root.get("lastName"))), like),
                         cb.like(cb.lower(root.get("city")), like)));
             }
             return cb.and(where.toArray(Predicate[]::new));
@@ -70,18 +70,15 @@ public class AdminOrdersController {
         CustomerOrder o = find(orderNumber);
         if (req.status() != null && !req.status().isBlank()) {
             OrderStatus next = parseStatus(req.status());
-            if (!o.status.next().contains(next)) {
-                throw new ApiException(HttpStatus.CONFLICT, "An order that is " + o.status.name().toLowerCase()
+            if (!o.getStatus().next().contains(next)) {
+                throw new ApiException(HttpStatus.CONFLICT, "An order that is " + o.getStatus().name().toLowerCase()
                         + " cannot move to " + next.name().toLowerCase() + ".");
             }
-            o.status = next;
-            List<StatusEvent> history = o.history == null ? new ArrayList<>() : new ArrayList<>(o.history);
-            history.add(new StatusEvent(next.name(), Instant.now(), who.getName(),
-                    req.note() == null || req.note().isBlank() ? null : req.note().trim()));
-            o.history = history;
+            o.setStatus(next);
+            o.record(next, Instant.now(), who.getName(),
+                    req.note() == null || req.note().isBlank() ? null : req.note().trim());
         }
-        if (req.adminNote() != null) o.adminNote = req.adminNote().isBlank() ? null : req.adminNote().trim();
-        o.updatedAt = Instant.now();
+        if (req.adminNote() != null) o.setAdminNote(req.adminNote().isBlank() ? null : req.adminNote().trim());
         return OrderDetail.of(o);
     }
 
