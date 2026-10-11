@@ -87,7 +87,8 @@ aws cloudformation update-stack --region ap-south-1 --stack-name store \
   --parameters ParameterKey=AdminEmail,UsePreviousValue=true ParameterKey=AdminCidr,UsePreviousValue=true \
                ParameterKey=ProjectName,UsePreviousValue=true ParameterKey=TaskCpu,UsePreviousValue=true \
                ParameterKey=TaskMemory,UsePreviousValue=true ParameterKey=DbInstanceClass,UsePreviousValue=true \
-               ParameterKey=DbMultiAz,UsePreviousValue=true ParameterKey=GitHubRepo,ParameterValue=OWNER/REPO
+               ParameterKey=DbMultiAz,UsePreviousValue=true ParameterKey=GitHubRepo,ParameterValue=OWNER/REPO \
+               ParameterKey=GitHubSubject,ParameterValue=''   # or OWNER@ID/REPO@ID if GitHub shows that subject
 aws cloudformation wait stack-update-complete --region ap-south-1 --stack-name store
 
 # 2. read the role ARN

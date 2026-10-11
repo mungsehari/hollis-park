@@ -42,9 +42,17 @@ Parameters:
       owner/name of the GitHub repository whose main branch may deploy through GitHub Actions (OIDC, no stored
       keys), for example mungsehari/hollis-park. Leave empty to skip.
     AllowedPattern: '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)?'
+  GitHubSubject:
+    Type: String
+    Default: ''
+    Description: >
+      Optional. The repository as it appears in the OIDC subject when GitHub uses immutable ids, for example
+      mungsehari@171213873/hollis-park@1414216300 (the token subject is then repo:<this>:ref:refs/heads/main).
+    AllowedPattern: '([A-Za-z0-9_.@-]+/[A-Za-z0-9_.@-]+)?'
 
 Conditions:
   HasGitHub: !Not [!Equals [!Ref GitHubRepo, '']]
+  HasGitHubSubject: !Not [!Equals [!Ref GitHubSubject, '']]
 
 Resources:
   # ------------------------------------------------------------------ network
@@ -452,7 +460,10 @@ Resources:
             Action: 'sts:AssumeRoleWithWebIdentity'
             Condition:
               StringEquals: {'token.actions.githubusercontent.com:aud': sts.amazonaws.com}
-              StringLike: {'token.actions.githubusercontent.com:sub': !Sub 'repo:${GitHubRepo}:ref:refs/heads/main'}
+              StringLike:
+                'token.actions.githubusercontent.com:sub':
+                  - !Sub 'repo:${GitHubRepo}:ref:refs/heads/main'
+                  - !If [HasGitHubSubject, !Sub 'repo:${GitHubSubject}:ref:refs/heads/main', !Ref 'AWS::NoValue']
       Policies:
         - PolicyName: deploy
           PolicyDocument:
