@@ -95,7 +95,13 @@ if [[ "${LOCAL_BUILD:-}" == 1 ]]; then
   echo "4/5  Pushing to ECR"
   for u in "$API_URI" "$WEB_URI"; do docker push "$u:$TAG" > /dev/null; docker push "$u:latest" > /dev/null; done
   echo "5/5  Starting the service and waiting until it is healthy"
-  aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --desired-count 1 --force-new-deployment > /dev/null
+  DESIRED="$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --query 'services[0].desiredCount' --output text)"
+  aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment > /dev/null
+  if [[ "$DESIRED" == 0 ]]; then
+    # New image first, then a task: otherwise ECS also starts an old task, which would run old migrations.
+    aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+    aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --desired-count 1 > /dev/null
+  fi
   aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
   echo "Released."
   cat <<MSG
