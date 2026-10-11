@@ -35,6 +35,16 @@ Parameters:
     Type: String
     Default: 'false'
     AllowedValues: ['true', 'false']
+  GitHubRepo:
+    Type: String
+    Default: ''
+    Description: >
+      owner/name of the GitHub repository whose main branch may deploy through GitHub Actions (OIDC, no stored
+      keys), for example mungsehari/hollis-park. Leave empty to skip.
+    AllowedPattern: '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)?'
+
+Conditions:
+  HasGitHub: !Not [!Equals [!Ref GitHubRepo, '']]
 
 Resources:
   # ------------------------------------------------------------------ network
@@ -422,6 +432,41 @@ Resources:
               Configuration: {ProjectName: !Ref Build}
               InputArtifacts: [{Name: Source}]
 
+  # ------------------------------------------------------------------ GitHub Actions deploy (OIDC)
+  GitHubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Condition: HasGitHub
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+      ThumbprintList: [6938fd4d98bab03faadb97b34396831e3780aea1]
+
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Condition: HasGitHub
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: {Federated: !Ref GitHubOidc}
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals: {'token.actions.githubusercontent.com:aud': sts.amazonaws.com}
+              StringLike: {'token.actions.githubusercontent.com:sub': !Sub 'repo:${GitHubRepo}:ref:refs/heads/main'}
+      Policies:
+        - PolicyName: deploy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action: [ecr:BatchCheckLayerAvailability, ecr:InitiateLayerUpload, ecr:UploadLayerPart, ecr:CompleteLayerUpload, ecr:PutImage, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer]
+                Resource: [!GetAtt ApiRepo.Arn, !GetAtt WebRepo.Arn]
+              - Effect: Allow
+                Action: [ecs:UpdateService, ecs:DescribeServices]
+                Resource: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:service/${Cluster}/${Service.Name}'
+
 Outputs:
   SiteUrl:
     Description: Store address (admin is at /admin, from AdminCidr only)
@@ -444,3 +489,7 @@ Outputs:
     Value: !Ref MediaBucket
   DatabaseEndpoint:
     Value: !GetAtt Db.Endpoint.Address
+  GitHubDeployRoleArn:
+    Condition: HasGitHub
+    Description: Role GitHub Actions assumes (put it in .github/workflows/deploy.yml as AWS_ROLE_ARN)
+    Value: !GetAtt GitHubDeployRole.Arn

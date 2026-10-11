@@ -3,14 +3,15 @@
 # folders go to S3 + CloudFront instead (see deploy/README.md).
 # Official images from the ECR Public mirror: Docker Hub rate-limits shared CI addresses.
 ARG REGISTRY=public.ecr.aws/docker/library
-FROM ${REGISTRY}/node:22-alpine AS store
+# The two npm builds produce plain static files, so they run on the build machine's own architecture.
+FROM --platform=$BUILDPLATFORM ${REGISTRY}/node:22-alpine AS store
 WORKDIR /src
 COPY store/package.json store/package-lock.json ./
 RUN npm ci
 COPY store/ .
 RUN npm run build
 
-FROM ${REGISTRY}/node:22-alpine AS admin
+FROM --platform=$BUILDPLATFORM ${REGISTRY}/node:22-alpine AS admin
 WORKDIR /src
 COPY admin/package.json admin/package-lock.json ./
 RUN npm ci

@@ -1,7 +1,8 @@
 # --- build ---
 # Official images from the ECR Public mirror: Docker Hub rate-limits shared CI addresses.
 ARG REGISTRY=public.ecr.aws/docker/library
-FROM ${REGISTRY}/maven:3.9-eclipse-temurin-21 AS build
+# The jar is platform independent, so the build stage runs natively and only the small run stage targets arm64.
+FROM --platform=$BUILDPLATFORM ${REGISTRY}/maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /src
 COPY pom.xml .
 RUN mvn -B dependency:go-offline

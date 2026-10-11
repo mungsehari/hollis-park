@@ -75,6 +75,33 @@ one task, forces a new deployment and waits until it is healthy. The tests are n
 Once CodeBuild is allowed (AWS Support case: Service Quotas, CodeBuild "concurrent builds"), run `deploy.sh`
 without `LOCAL_BUILD` and the pipeline takes over; the template is already ARM64 for both.
 
+## GitHub Actions (deploy on every push to main)
+
+`.github/workflows/deploy.yml` runs the backend tests, builds both `linux/arm64` images, pushes them to ECR and
+rolls the ECS service, with no AWS keys stored in GitHub (OIDC). One-time setup, as the AWS user that owns the stack:
+
+```bash
+# 1. add the GitHub role to the stack (keeps every other parameter as it is)
+aws cloudformation update-stack --region ap-south-1 --stack-name store \
+  --template-body file://deploy/aws/template.yaml --capabilities CAPABILITY_IAM \
+  --parameters ParameterKey=AdminEmail,UsePreviousValue=true ParameterKey=AdminCidr,UsePreviousValue=true \
+               ParameterKey=ProjectName,UsePreviousValue=true ParameterKey=TaskCpu,UsePreviousValue=true \
+               ParameterKey=TaskMemory,UsePreviousValue=true ParameterKey=DbInstanceClass,UsePreviousValue=true \
+               ParameterKey=DbMultiAz,UsePreviousValue=true ParameterKey=GitHubRepo,ParameterValue=OWNER/REPO
+aws cloudformation wait stack-update-complete --region ap-south-1 --stack-name store
+
+# 2. read the role ARN
+aws cloudformation describe-stacks --region ap-south-1 --stack-name store \
+  --query "Stacks[0].Outputs[?OutputKey=='GitHubDeployRoleArn'].OutputValue" --output text
+```
+
+3. In GitHub: repository -> Settings -> Secrets and variables -> Actions -> **Variables** -> New repository
+   variable `AWS_ROLE_ARN` = that ARN. Then push to `main`, or run the workflow from the Actions tab.
+
+Only the `main` branch of that repository can assume the role, and it can only push the two images and roll this
+one service. The workflow has the cluster, service and repository names of this stack in its `env:` block; change
+them if the stack is ever recreated.
+
 ## How releases work (CI/CD)
 
 Every new `source.zip` in the source bucket starts the pipeline. Re-run `deploy/aws/deploy.sh` to ship a change.
