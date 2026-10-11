@@ -7,6 +7,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ApiError } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
+import loginHero from "@/assets/login-hero.webp"
 
 export function Login() {
   const { me, login } = useAuth()
@@ -36,8 +37,10 @@ export function Login() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="relative hidden overflow-hidden bg-[#8D9A89] lg:block">
-        <img src="/images/hero-portrait.webp" alt="" className="absolute inset-0 size-full object-cover object-right" />
-        <div className="relative p-10 text-white">
+        <img src={loginHero} alt="" className="absolute inset-0 size-full object-cover object-right" />
+        {/* keeps the white heading readable on light parts of the photo */}
+        <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-black/45 to-transparent" />
+        <div className="relative p-10 text-right text-white">
           <p className="font-mono text-xs tracking-[0.2em] uppercase">Hollis Park</p>
           <p className="mt-4 font-heading text-6xl leading-[0.95] font-extrabold tracking-tight uppercase">Store<br />admin</p>
         </div>
