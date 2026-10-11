@@ -1,0 +1,22 @@
+{
+  "neutral": {
+    "label": "Neutral",
+    "hex": "#ECE6D8"
+  },
+  "grey": {
+    "label": "Grey",
+    "hex": "#A9ACA6"
+  },
+  "green": {
+    "label": "Green",
+    "hex": "#556A4E"
+  },
+  "blue": {
+    "label": "Blue",
+    "hex": "#5F7897"
+  },
+  "earth": {
+    "label": "Earth",
+    "hex": "#A2644A"
+  }
+}

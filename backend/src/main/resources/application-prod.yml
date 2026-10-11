@@ -1,0 +1,13 @@
+# Production (AWS RDS PostgreSQL). Everything sensitive comes from environment variables.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: ${SESSION_COOKIE_SECURE:true}
+  forward-headers-strategy: framework

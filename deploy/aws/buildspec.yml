@@ -1,0 +1,39 @@
+version: 0.2
+
+# Runs in CodeBuild on every new source.zip: test, build both images, push, roll the ECS service.
+# Any failing step stops the release and the running version keeps serving.
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+      nodejs: 22
+
+  pre_build:
+    commands:
+      - export IMAGE_TAG="b${CODEBUILD_BUILD_NUMBER}"
+      - echo "Release ${IMAGE_TAG}"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "${API_REPO_URI%%/*}"
+
+  build:
+    commands:
+      # --- API tests on a real PostgreSQL. The embedded server refuses to run as root, so use a normal user.
+      - useradd -m ci
+      - chown -R ci:ci backend
+      - su ci -c "cd $CODEBUILD_SRC_DIR/backend && JAVA_HOME=$JAVA_HOME PATH=$JAVA_HOME/bin:$PATH mvn -B -q test"
+      # --- images: the API, and nginx carrying the built store and admin (their type checks run in the build)
+      - docker build -t "$API_REPO_URI:$IMAGE_TAG" -t "$API_REPO_URI:latest" backend
+      - >
+        docker build -f web.Dockerfile --build-arg NGINX_CONF=deploy/nginx.aws.conf
+        -t "$WEB_REPO_URI:$IMAGE_TAG" -t "$WEB_REPO_URI:latest" .
+
+  post_build:
+    commands:
+      - docker push "$API_REPO_URI:$IMAGE_TAG"
+      - docker push "$API_REPO_URI:latest"
+      - docker push "$WEB_REPO_URI:$IMAGE_TAG"
+      - docker push "$WEB_REPO_URI:latest"
+      # The first release also takes the service from 0 to 1 task. If the new task never becomes healthy the
+      # deployment circuit breaker rolls back by itself.
+      - aws ecs update-service --cluster "$ECS_CLUSTER" --service "$ECS_SERVICE" --desired-count 1 --force-new-deployment > /dev/null
+      - aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE"
+      - echo "Released ${IMAGE_TAG}"

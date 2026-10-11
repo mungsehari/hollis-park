@@ -1,0 +1,34 @@
+[
+  {
+    "id": "tide-studio",
+    "name": "Tide Studio",
+    "for": "Running",
+    "text": "Road shoes designed with a panel of forty runners. Light uppers, rocker geometry and foam tuned for easy and steady miles.",
+    "products": [
+      "tide-one",
+      "drift-knit"
+    ]
+  },
+  {
+    "id": "yard-supply",
+    "name": "Yard Supply",
+    "for": "Training and trail",
+    "text": "Low, stable and hard-wearing. Reinforced toes, grippy rubber and uppers that shrug off chalk, mud and rope climbs.",
+    "products": [
+      "yard-runner",
+      "ridge-form"
+    ]
+  },
+  {
+    "id": "hollis-form",
+    "name": "Hollis Form",
+    "for": "Court and everyday",
+    "text": "Leather, suede and canvas on cupsoles and vulcanized soles. Classic proportions, built to be worn every day and resoled.",
+    "products": [
+      "rally-mid",
+      "loop-strap",
+      "metro-quiet",
+      "everyday-arc"
+    ]
+  }
+]

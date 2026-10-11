@@ -1,0 +1,677 @@
+[
+  {
+    "id": "tide-one",
+    "name": "Tide One",
+    "collection": "running",
+    "line": "Tide Studio",
+    "colourway": "Chalk / Clay",
+    "swatch": "linear-gradient(135deg, #ECE7DC 50%, #B86F55 50%)",
+    "colours": [
+      "neutral",
+      "earth"
+    ],
+    "price": 10999,
+    "wide": {
+      "extra": 799,
+      "soldOut": [
+        6,
+        6.5,
+        13
+      ]
+    },
+    "rating": 4.8,
+    "reviews": 612,
+    "flag": "Bestseller",
+    "rank": 1,
+    "added": "2025-03-04",
+    "img": "p-tide-one",
+    "context": "col-running",
+    "contextCaption": "Tide One on an early towpath run",
+    "alt": "Tide One running shoe in off-white mesh with a clay heel and a cream foam sole, side view",
+    "blurb": "A light daily trainer with a soft rocker for easy and steady miles.",
+    "desc": "Tide One is the pair our own team reaches for most mornings. The engineered mesh opens up where you heat up, the clay heel counter holds without pressing, and a gently rocked foam midsole rolls you through each stride without feeling tall.",
+    "specs": [
+      [
+        "Weight",
+        "238 g",
+        "US 9, one shoe"
+      ],
+      [
+        "Drop",
+        "8 mm",
+        "Heel to forefoot"
+      ],
+      [
+        "Stack",
+        "36/28",
+        "Millimetres of foam"
+      ],
+      [
+        "Best for",
+        "5-21 km",
+        "Easy and steady road runs"
+      ]
+    ],
+    "materials": [
+      [
+        "Upper",
+        "Engineered mesh, 62% recycled polyester"
+      ],
+      [
+        "Lining",
+        "Brushed polyester in clay"
+      ],
+      [
+        "Midsole",
+        "EVA blend with 18% sugarcane"
+      ],
+      [
+        "Outsole",
+        "Carbon rubber in high-wear zones"
+      ],
+      [
+        "Insole",
+        "Removable, 5 mm"
+      ]
+    ],
+    "fit": {
+      "verdict": "True to size",
+      "text": "True to size with a roomy toe box. If you are between sizes and like a locked-in feel, take the smaller size."
+    },
+    "care": "Remove the insole and laces. Hand wash the upper with cold water and a soft brush, then air dry away from direct heat.",
+    "soldOut": [
+      13
+    ],
+    "low": [
+      9.5,
+      10
+    ],
+    "keywords": "mesh road daily trainer rocker coral clay white chalk running"
+  },
+  {
+    "id": "drift-knit",
+    "name": "Drift Knit",
+    "collection": "running",
+    "line": "Tide Studio",
+    "colourway": "Mist / Slate",
+    "swatch": "linear-gradient(135deg, #CFD1CF 50%, #6F86A0 50%)",
+    "colours": [
+      "grey",
+      "blue"
+    ],
+    "price": 11799,
+    "wide": {
+      "extra": 799,
+      "soldOut": [
+        6,
+        12.5,
+        13
+      ]
+    },
+    "rating": 4.7,
+    "reviews": 148,
+    "flag": "New",
+    "rank": 4,
+    "added": "2026-08-06",
+    "img": "p-drift-knit",
+    "context": null,
+    "alt": "Drift Knit running shoe in pale grey knit with a slate blue heel and white foam sole, side view",
+    "blurb": "A cushioned knit runner for longer days on your feet.",
+    "desc": "Drift Knit wraps the foot in a one-piece knit with a stretch collar, so it slips on like a sock and stays put. The deeper foam stack is tuned for long runs, and for nurses, teachers and anyone standing through a ten-hour shift.",
+    "specs": [
+      [
+        "Weight",
+        "262 g",
+        "US 9, one shoe"
+      ],
+      [
+        "Drop",
+        "10 mm",
+        "Heel to forefoot"
+      ],
+      [
+        "Stack",
+        "38/28",
+        "Millimetres of foam"
+      ],
+      [
+        "Best for",
+        "Long runs",
+        "And long shifts"
+      ]
+    ],
+    "materials": [
+      [
+        "Upper",
+        "One-piece circular knit, stretch collar"
+      ],
+      [
+        "Heel",
+        "Padded, slate blue"
+      ],
+      [
+        "Midsole",
+        "Supercritical foam, 38 mm heel"
+      ],
+      [
+        "Outsole",
+        "Rubber pods in slate blue"
+      ],
+      [
+        "Insole",
+        "Removable, 6 mm"
+      ]
+    ],
+    "fit": {
+      "verdict": "True to size",
+      "text": "True to size. The knit relaxes after the first week, so if you are between sizes take the smaller one."
+    },
+    "care": "Hand wash cold with a soft brush and air dry. Drift Knit cannot be resoled because the knit and foam are bonded as one piece.",
+    "soldOut": [
+      12.5
+    ],
+    "low": [
+      8
+    ],
+    "keywords": "knit cushioned long run slip on grey blue slate mist running"
+  },
+  {
+    "id": "rally-mid",
+    "name": "Rally Mid",
+    "collection": "basketball",
+    "line": "Hollis Form",
+    "colourway": "Bone / Forest",
+    "swatch": "linear-gradient(135deg, #EDE8DC 50%, #3E5A45 50%)",
+    "colours": [
+      "neutral",
+      "green"
+    ],
+    "price": 12999,
+    "wide": null,
+    "rating": 4.8,
+    "reviews": 391,
+    "flag": "Bestseller",
+    "rank": 2,
+    "added": "2025-09-12",
+    "img": "p-rally-mid",
+    "context": "col-basketball",
+    "contextCaption": "Rally Mid at the Tuesday pickup game",
+    "alt": "Rally Mid high-top in bone leather with forest green suede overlays, side view",
+    "blurb": "A leather high-top with a grippy herringbone outsole for pickup games.",
+    "desc": "Rally Mid keeps the shape of a classic court high-top and adds what the modern game needs: a padded collar that locks the ankle, a firm heel cup, and a herringbone outsole that bites on dusty community-centre floors.",
+    "specs": [
+      [
+        "Weight",
+        "486 g",
+        "US 9, one shoe"
+      ],
+      [
+        "Drop",
+        "6 mm",
+        "Heel to forefoot"
+      ],
+      [
+        "Stack",
+        "30/24",
+        "Cupsole and insert"
+      ],
+      [
+        "Best for",
+        "Indoor",
+        "Pickup and league games"
+      ]
+    ],
+    "materials": [
+      [
+        "Upper",
+        "Full-grain leather with suede overlays"
+      ],
+      [
+        "Collar",
+        "Padded memory foam"
+      ],
+      [
+        "Midsole",
+        "Rubber cupsole, EVA insert"
+      ],
+      [
+        "Outsole",
+        "Herringbone rubber"
+      ],
+      [
+        "Insole",
+        "Removable, 7 mm"
+      ]
+    ],
+    "fit": {
+      "verdict": "Runs half large",
+      "text": "Runs half a size large. Most players take half a size down. If you wear thick court socks, stay in your usual size."
+    },
+    "care": "Wipe the leather with a damp cloth, brush the suede when dry, and condition the leather every few months.",
+    "soldOut": [
+      6.5,
+      7
+    ],
+    "low": [
+      11
+    ],
+    "keywords": "leather high top court basketball green forest bone white"
+  },
+  {
+    "id": "loop-strap",
+    "name": "Loop Strap",
+    "collection": "basketball",
+    "line": "Hollis Form",
+    "colourway": "Chalk / Brick",
+    "swatch": "linear-gradient(135deg, #F1EEE8 50%, #A8584A 50%)",
+    "colours": [
+      "neutral",
+      "earth"
+    ],
+    "price": 12499,
+    "wide": null,
+    "rating": 4.6,
+    "reviews": 204,
+    "flag": "New colour",
+    "rank": 6,
+    "added": "2026-06-10",
+    "img": "p-loop-strap",
+    "context": null,
+    "alt": "Loop Strap mid-top in white leather with brick red suede panels and an ankle strap, side view",
+    "blurb": "A mid-top court shoe with an ankle strap for studio and street.",
+    "desc": "Loop Strap borrows the strap and cupsole of an old gym shoe and trims the weight. The brick suede panels soften with wear, and the strap adds a second lock for dance class, the studio or a run for the bus.",
+    "specs": [
+      [
+        "Weight",
+        "412 g",
+        "US 9, one shoe"
+      ],
+      [
+        "Drop",
+        "5 mm",
+        "Heel to forefoot"
+      ],
+      [
+        "Stack",
+        "28/23",
+        "Cupsole and insert"
+      ],
+      [
+        "Best for",
+        "Studio",
+        "Court, class and city"
+      ]
+    ],
+    "materials": [
+      [
+        "Upper",
+        "Leather with brick suede panels"
+      ],
+      [
+        "Strap",
+        "Adjustable, matte hook-and-loop"
+      ],
+      [
+        "Midsole",
+        "Rubber cupsole"
+      ],
+      [
+        "Outsole",
+        "Pivot-point rubber"
+      ],
+      [
+        "Insole",
+        "Removable, 6 mm"
+      ]
+    ],
+    "fit": {
+      "verdict": "True to size",
+      "text": "True to size. Snug through the midfoot for the first few wears until the leather softens."
+    },
+    "care": "Wipe the leather with a damp cloth and brush the suede when dry. Keep the strap closed when washing so it does not collect lint.",
+    "soldOut": [
+      12,
+      13
+    ],
+    "low": [
+      7.5
+    ],
+    "keywords": "leather mid top strap court dance studio red brick white chalk"
+  },
+  {
+    "id": "ridge-form",
+    "name": "Ridge Form",
+    "collection": "training",
+    "line": "Yard Supply",
+    "colourway": "Stone / Umber",
+    "swatch": "linear-gradient(135deg, #C9B79C 50%, #6B4E3A 50%)",
+    "colours": [
+      "earth"
+    ],
+    "price": 11999,
+    "wide": null,
+    "rating": 4.7,
+    "reviews": 287,
+    "flag": null,
+    "rank": 5,
+    "added": "2025-11-02",
+    "img": "p-ridge-form",
+    "context": null,
+    "alt": "Ridge Form shoe in stone suede and ripstop with umber overlays, toggle laces and a lugged sole, side view",
+    "blurb": "A suede trail shoe with 4 mm lugs for gravel, towpaths and wet grass.",
+    "desc": "Ridge Form is built for the paths at the edge of town. A suede and ripstop upper sheds light rain, the rubber toe bumper takes the knocks, and 4 mm lugs grip on gravel without feeling clumsy on the pavement that gets you there.",
+    "specs": [
+      [
+        "Weight",
+        "318 g",
+        "US 9, one shoe"
+      ],
+      [
+        "Drop",
+        "6 mm",
+        "Heel to forefoot"
+      ],
+      [
+        "Stack",
+        "32/26",
+        "Millimetres of foam"
+      ],
+      [
+        "Best for",
+        "Gravel",
+        "Towpath and light trail"
+      ]
+    ],
+    "materials": [
+      [
+        "Upper",
+        "Suede and ripstop, water-repellent"
+      ],
+      [
+        "Toe",
+        "Moulded rubber bumper"
+      ],
+      [
+        "Laces",
+        "Quick-pull toggle"
+      ],
+      [
+        "Midsole",
+        "Dual-density EVA"
+      ],
+      [
+        "Outsole",
+        "4 mm lugs, sticky rubber"
+      ]
+    ],
+    "fit": {
+      "verdict": "Runs small",
+      "text": "Runs slightly small. Take half a size up if you wear thick socks or have a high instep."
+    },
+    "care": "Let mud dry, then brush it off. Re-proof the suede with a water-repellent spray every few months.",
+    "soldOut": [
+      6
+    ],
+    "low": [
+      10.5,
+      11
+    ],
+    "keywords": "trail suede lugs gravel hiking outdoor brown umber stone beige toggle"
+  },
+  {
+    "id": "yard-runner",
+    "name": "Yard Runner",
+    "collection": "training",
+    "line": "Yard Supply",
+    "colourway": "Moss",
+    "swatch": "linear-gradient(135deg, #5E6B4F 50%, #3A3D3A 50%)",
+    "colours": [
+      "green"
+    ],
+    "price": 9999,
+    "wide": {
+      "extra": 799,
+      "soldOut": [
+        6,
+        6.5,
+        12.5,
+        13
+      ]
+    },
+    "rating": 4.6,
+    "reviews": 175,
+    "flag": null,
+    "rank": 7,
+    "added": "2026-04-14",
+    "img": "p-yard-runner",
+    "context": "col-training",
+    "contextCaption": "Yard Runner in the Marlowe training studio",
+    "alt": "Yard Runner training shoe in moss green knit with a flat charcoal sole, side view",
+    "blurb": "A low, stable trainer for lifting, classes and short runs.",
+    "desc": "Yard Runner sits low to the floor on a wide, flat base, so it stays planted under a barbell and still feels easy on the jog home. The moss knit is reinforced at the toe, where rope climbs and burpees wear through first.",
+    "specs": [
+      [
+        "Weight",
+        "274 g",
+        "US 9, one shoe"
+      ],
+      [
+        "Drop",
+        "4 mm",
+        "Heel to forefoot"
+      ],
+      [
+        "Stack",
+        "22/18",
+        "Millimetres of foam"
+      ],
+      [
+        "Best for",
+        "Gym",
+        "Lifting, classes, short runs"
+      ]
+    ],
+    "materials": [
+      [
+        "Upper",
+        "Reinforced knit, abrasion toe"
+      ],
+      [
+        "Heel",
+        "Charcoal counter"
+      ],
+      [
+        "Midsole",
+        "Firm EVA on a wide base"
+      ],
+      [
+        "Outsole",
+        "Flat rubber with rope-climb wrap"
+      ],
+      [
+        "Insole",
+        "Removable, 4 mm"
+      ]
+    ],
+    "fit": {
+      "verdict": "True to size",
+      "text": "True to size with a wide forefoot. Narrow feet may prefer half a size down."
+    },
+    "care": "Brush off chalk when dry. Hand wash cold with a soft brush and air dry away from heat.",
+    "soldOut": [
+      13
+    ],
+    "low": [
+      9
+    ],
+    "keywords": "gym training lifting knit stable flat green moss olive charcoal"
+  },
+  {
+    "id": "metro-quiet",
+    "name": "Metro Quiet",
+    "collection": "lifestyle",
+    "line": "Hollis Form",
+    "colourway": "Fog",
+    "swatch": "linear-gradient(135deg, #B7B8B3 50%, #E9E3D6 50%)",
+    "colours": [
+      "grey",
+      "neutral"
+    ],
+    "price": 11299,
+    "wide": {
+      "extra": 799,
+      "soldOut": [
+        6,
+        13
+      ]
+    },
+    "rating": 4.9,
+    "reviews": 544,
+    "flag": "Bestseller",
+    "rank": 3,
+    "added": "2025-05-20",
+    "img": "p-metro-quiet",
+    "context": "hero-model",
+    "contextCaption": "Metro Quiet in Fog, from the autumn campaign",
+    "alt": "Metro Quiet retro runner in fog grey suede over pale mesh with a cream sole, side view",
+    "blurb": "A retro runner in layered suede for every day that is not a run.",
+    "desc": "Metro Quiet takes the shape of a late-seventies trainer and gives it softer foam and a calmer palette. Layered fog suede over breathable mesh looks sharp with tailoring and easy with denim, and the cream sole ages well.",
+    "specs": [
+      [
+        "Weight",
+        "298 g",
+        "US 9, one shoe"
+      ],
+      [
+        "Drop",
+        "9 mm",
+        "Heel to forefoot"
+      ],
+      [
+        "Stack",
+        "30/21",
+        "Millimetres of foam"
+      ],
+      [
+        "Best for",
+        "All day",
+        "City, travel, office"
+      ]
+    ],
+    "materials": [
+      [
+        "Upper",
+        "Suede overlays on breathable mesh"
+      ],
+      [
+        "Lining",
+        "Cotton blend"
+      ],
+      [
+        "Midsole",
+        "Soft EVA in cream"
+      ],
+      [
+        "Outsole",
+        "Natural rubber"
+      ],
+      [
+        "Insole",
+        "Cork blend, removable"
+      ]
+    ],
+    "fit": {
+      "verdict": "True to size",
+      "text": "True to size with a medium toe box. Wide is available if you usually size up for width."
+    },
+    "care": "Brush the suede with a suede brush, lift marks with a suede eraser and use a water-repellent spray before the first wear.",
+    "soldOut": [
+      7
+    ],
+    "low": [
+      8.5,
+      12
+    ],
+    "keywords": "retro runner suede grey fog cream everyday lifestyle city"
+  },
+  {
+    "id": "everyday-arc",
+    "name": "Everyday Arc",
+    "collection": "lifestyle",
+    "line": "Hollis Form",
+    "colourway": "Canvas / Navy",
+    "swatch": "linear-gradient(135deg, #EFE9DA 50%, #2E3B58 50%)",
+    "colours": [
+      "neutral",
+      "blue"
+    ],
+    "price": 7499,
+    "wide": null,
+    "rating": 4.7,
+    "reviews": 402,
+    "flag": "Under ₹8,000",
+    "rank": 8,
+    "added": "2024-10-01",
+    "img": "p-everyday-arc",
+    "context": "col-lifestyle",
+    "contextCaption": "Everyday Arc, Saturday morning",
+    "alt": "Everyday Arc low-top in cream canvas with a navy toe cap and a honey gum sole, side view",
+    "blurb": "A cotton canvas low-top on a vulcanized gum sole.",
+    "desc": "Everyday Arc is the simplest pair we make: heavy organic cotton canvas, a navy toe cap and a vulcanized gum sole that flexes from the first day. It is the pair you stop thinking about, which is the point.",
+    "specs": [
+      [
+        "Weight",
+        "340 g",
+        "US 9, one shoe"
+      ],
+      [
+        "Drop",
+        "0 mm",
+        "Flat sole"
+      ],
+      [
+        "Stack",
+        "14/14",
+        "Vulcanized rubber"
+      ],
+      [
+        "Best for",
+        "Everyday",
+        "Weekends and summer"
+      ]
+    ],
+    "materials": [
+      [
+        "Upper",
+        "12 oz organic cotton canvas"
+      ],
+      [
+        "Toe cap",
+        "Navy canvas"
+      ],
+      [
+        "Sole",
+        "Vulcanized natural gum rubber"
+      ],
+      [
+        "Insole",
+        "Cork blend, removable"
+      ],
+      [
+        "Laces",
+        "Waxed cotton"
+      ]
+    ],
+    "fit": {
+      "verdict": "Runs half large",
+      "text": "Runs half a size large. Take half a size down from your usual size."
+    },
+    "care": "Spot clean the canvas with mild soap and a soft brush. Stuff with paper and air dry.",
+    "soldOut": [],
+    "low": [
+      6.5,
+      12
+    ],
+    "keywords": "canvas low top vulcanized gum navy cream classic everyday summer"
+  }
+]

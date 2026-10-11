@@ -1,0 +1,446 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Hollis Park store on AWS (small / demo size, no CloudFront): ALB -> one ECS Fargate task running nginx (store and
+  admin) and the Spring Boot API side by side, RDS PostgreSQL, an S3 bucket for uploaded images, and a CodePipeline +
+  CodeBuild CI/CD pipeline that tests, builds and deploys every new source.zip. Plain HTTP until a domain and a
+  certificate are added, so the staff pages are limited to AdminCidr.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: hollis-park
+    AllowedPattern: '[a-z][a-z0-9-]{2,24}'
+  AdminEmail:
+    Type: String
+    Description: Login email of the first admin account. The password is generated and kept in Secrets Manager.
+    AllowedPattern: '[^@\s]+@[^@\s]+\.[^@\s]+'
+  AdminCidr:
+    Type: String
+    Description: >
+      Public IP range allowed to open /admin, /api/admin and /api/auth, for example 203.0.113.7/32. The site is plain
+      HTTP for now, so keeping staff pages to your own address protects the admin login. 0.0.0.0/0 opens them to all.
+    AllowedPattern: '[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}'
+  TaskCpu:
+    Type: String
+    Default: '1024'
+    AllowedValues: ['512', '1024', '2048']
+  TaskMemory:
+    Type: String
+    Default: '2048'
+    AllowedValues: ['1024', '2048', '4096']
+  DbInstanceClass:
+    Type: String
+    Default: db.t4g.micro
+  DbMultiAz:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+
+Resources:
+  # ------------------------------------------------------------------ network
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.20.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{Key: Name, Value: !Ref ProjectName}]
+
+  Igw:
+    Type: AWS::EC2::InternetGateway
+  IgwAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: {VpcId: !Ref Vpc, InternetGatewayId: !Ref Igw}
+
+  PublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.20.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{Key: Name, Value: !Sub '${ProjectName}-public-a'}]
+  PublicB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.20.1.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{Key: Name, Value: !Sub '${ProjectName}-public-b'}]
+  DataA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.20.10.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags: [{Key: Name, Value: !Sub '${ProjectName}-data-a'}]
+  DataB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.20.11.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags: [{Key: Name, Value: !Sub '${ProjectName}-data-b'}]
+
+  PublicRoutes:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref Vpc}
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: IgwAttach
+    Properties: {RouteTableId: !Ref PublicRoutes, DestinationCidrBlock: 0.0.0.0/0, GatewayId: !Ref Igw}
+  PublicRouteA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref PublicA, RouteTableId: !Ref PublicRoutes}
+  PublicRouteB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref PublicB, RouteTableId: !Ref PublicRoutes}
+
+  AlbSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Load balancer, open to the internet on port 80
+      VpcId: !Ref Vpc
+      SecurityGroupIngress: [{IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0}]
+  TaskSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Store tasks, reachable only from the load balancer
+      VpcId: !Ref Vpc
+      SecurityGroupIngress: [{IpProtocol: tcp, FromPort: 80, ToPort: 80, SourceSecurityGroupId: !Ref AlbSg}]
+  DbSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PostgreSQL, reachable only from the store tasks
+      VpcId: !Ref Vpc
+      SecurityGroupIngress: [{IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref TaskSg}]
+
+  # ------------------------------------------------------------------ secrets
+  AdminSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: First admin password for the admin panel (sign in with the AdminEmail you gave)
+      GenerateSecretString: {PasswordLength: 24, ExcludePunctuation: true}
+  RazorpaySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: Razorpay keys, filled by deploy.sh. Keep key_id empty to run without online payment.
+      SecretString: '{"key_id":"","key_secret":"","webhook_secret":""}'
+
+  # ------------------------------------------------------------------ database
+  DbSubnets:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for PostgreSQL
+      SubnetIds: [!Ref DataA, !Ref DataB]
+  Db:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      Engine: postgres
+      DBInstanceClass: !Ref DbInstanceClass
+      AllocatedStorage: '20'
+      StorageType: gp3
+      StorageEncrypted: true
+      DBName: store
+      MasterUsername: store
+      ManageMasterUserPassword: true
+      MultiAZ: !Ref DbMultiAz
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 7
+      DBSubnetGroupName: !Ref DbSubnets
+      VPCSecurityGroups: [!Ref DbSg]
+      AutoMinorVersionUpgrade: true
+
+  # ------------------------------------------------------------------ uploaded images
+  MediaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration: [{ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}}]
+      PublicAccessBlockConfiguration: {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
+
+  # ------------------------------------------------------------------ load balancer
+  Alb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      SecurityGroups: [!Ref AlbSg]
+      Subnets: [!Ref PublicA, !Ref PublicB]
+      LoadBalancerAttributes: [{Key: idle_timeout.timeout_seconds, Value: '60'}]
+  WebTargets:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref Vpc
+      Port: 80
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckPath: /actuator/health/readiness
+      HealthCheckIntervalSeconds: 15
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      TargetGroupAttributes: [{Key: deregistration_delay.timeout_seconds, Value: '30'}]
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref Alb
+      Port: 80
+      Protocol: HTTP
+      DefaultActions: [{Type: forward, TargetGroupArn: !Ref WebTargets}]
+  # Staff pages and sign-in: only from AdminCidr. Everyone else gets 403 (the store itself stays public).
+  StaffFromOffice:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref Listener
+      Priority: 5
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig: {Values: [/admin, /admin/*, /api/admin/*, /api/auth/*]}
+        - Field: source-ip
+          SourceIpConfig: {Values: [!Ref AdminCidr]}
+      Actions: [{Type: forward, TargetGroupArn: !Ref WebTargets}]
+  StaffFromElsewhere:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref Listener
+      Priority: 6
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig: {Values: [/admin, /admin/*, /api/admin/*, /api/auth/*]}
+      Actions:
+        - Type: fixed-response
+          FixedResponseConfig: {StatusCode: '403', ContentType: text/plain, MessageBody: 'Staff pages are limited to the office network.'}
+
+  # ------------------------------------------------------------------ ECS
+  ApiRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      ImageScanningConfiguration: {ScanOnPush: true}
+      LifecyclePolicy:
+        LifecyclePolicyText: '{"rules":[{"rulePriority":1,"description":"keep 15","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":15},"action":{"type":"expire"}}]}'
+  WebRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      ImageScanningConfiguration: {ScanOnPush: true}
+      LifecyclePolicy:
+        LifecyclePolicyText: '{"rules":[{"rulePriority":1,"description":"keep 15","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":15},"action":{"type":"expire"}}]}'
+  Logs:
+    Type: AWS::Logs::LogGroup
+    Properties: {RetentionInDays: 30}
+  Cluster:
+    Type: AWS::ECS::Cluster
+
+  ExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement: [{Effect: Allow, Principal: {Service: ecs-tasks.amazonaws.com}, Action: 'sts:AssumeRole'}]
+      ManagedPolicyArns: ['arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy']
+      Policies:
+        - PolicyName: read-secrets
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: [!GetAtt Db.MasterUserSecret.SecretArn, !Ref AdminSecret, !Ref RazorpaySecret]
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement: [{Effect: Allow, Principal: {Service: ecs-tasks.amazonaws.com}, Action: 'sts:AssumeRole'}]
+      Policies:
+        - PolicyName: media-bucket
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: [s3:PutObject, s3:GetObject, s3:DeleteObject]
+                Resource: !Sub '${MediaBucket.Arn}/media/*'
+
+  TaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${ProjectName}-${AWS::StackName}'
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: !Ref TaskCpu
+      Memory: !Ref TaskMemory
+      ExecutionRoleArn: !GetAtt ExecRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      RuntimePlatform: {CpuArchitecture: ARM64, OperatingSystemFamily: LINUX}
+      ContainerDefinitions:
+        - Name: web
+          Image: !Sub '${WebRepo.RepositoryUri}:latest'
+          Essential: true
+          PortMappings: [{ContainerPort: 80}]
+          DependsOn: [{ContainerName: api, Condition: START}]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options: {awslogs-group: !Ref Logs, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: web}
+        - Name: api
+          Image: !Sub '${ApiRepo.RepositoryUri}:latest'
+          Essential: true
+          PortMappings: [{ContainerPort: 8080}]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options: {awslogs-group: !Ref Logs, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: api}
+          Environment:
+            - {Name: SPRING_PROFILES_ACTIVE, Value: prod}
+            - {Name: DB_URL, Value: !Sub 'jdbc:postgresql://${Db.Endpoint.Address}:5432/store?sslmode=require'}
+            - {Name: CORS_ALLOWED_ORIGINS, Value: !Sub 'http://${Alb.DNSName}'}
+            # Plain HTTP for now: a Secure cookie would never be sent back. Set true once HTTPS is added.
+            - {Name: SESSION_COOKIE_SECURE, Value: 'false'}
+            - {Name: MEDIA_STORAGE, Value: s3}
+            - {Name: MEDIA_BUCKET, Value: !Ref MediaBucket}
+            - {Name: MEDIA_BASE_URL, Value: /media}
+            - {Name: AWS_REGION, Value: !Ref 'AWS::Region'}
+            - {Name: ADMIN_EMAIL, Value: !Ref AdminEmail}
+            - {Name: JAVA_TOOL_OPTIONS, Value: '-XX:MaxRAMPercentage=70'}
+          Secrets:
+            - {Name: DB_USERNAME, ValueFrom: !Sub '${Db.MasterUserSecret.SecretArn}:username::'}
+            - {Name: DB_PASSWORD, ValueFrom: !Sub '${Db.MasterUserSecret.SecretArn}:password::'}
+            - {Name: ADMIN_PASSWORD, ValueFrom: !Ref AdminSecret}
+            - {Name: RAZORPAY_KEY_ID, ValueFrom: !Sub '${RazorpaySecret}:key_id::'}
+            - {Name: RAZORPAY_KEY_SECRET, ValueFrom: !Sub '${RazorpaySecret}:key_secret::'}
+            - {Name: RAZORPAY_WEBHOOK_SECRET, ValueFrom: !Sub '${RazorpaySecret}:webhook_secret::'}
+
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn: [Listener]
+    Properties:
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      TaskDefinition: !Ref TaskDef
+      # The images do not exist until the pipeline's first run; the pipeline then raises this to 1.
+      DesiredCount: 0
+      HealthCheckGracePeriodSeconds: 120
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+        DeploymentCircuitBreaker: {Enable: true, Rollback: true}
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref PublicA, !Ref PublicB]
+          SecurityGroups: [!Ref TaskSg]
+      LoadBalancers: [{ContainerName: web, ContainerPort: 80, TargetGroupArn: !Ref WebTargets}]
+
+  # ------------------------------------------------------------------ CI/CD
+  SourceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration: {Status: Enabled}
+      PublicAccessBlockConfiguration: {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
+      LifecycleConfiguration:
+        Rules: [{Id: expire-old, Status: Enabled, NoncurrentVersionExpiration: {NoncurrentDays: 30}}]
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration: {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
+      LifecycleConfiguration:
+        Rules: [{Id: expire, Status: Enabled, ExpirationInDays: 30}]
+
+  BuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement: [{Effect: Allow, Principal: {Service: codebuild.amazonaws.com}, Action: 'sts:AssumeRole'}]
+      Policies:
+        - PolicyName: build
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents]
+                Resource: '*'
+              - Effect: Allow
+                Action: [s3:GetObject, s3:GetObjectVersion, s3:PutObject]
+                Resource: [!Sub '${ArtifactBucket.Arn}/*', !Sub '${SourceBucket.Arn}/*']
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action: [ecr:BatchCheckLayerAvailability, ecr:InitiateLayerUpload, ecr:UploadLayerPart, ecr:CompleteLayerUpload, ecr:PutImage, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer]
+                Resource: [!GetAtt ApiRepo.Arn, !GetAtt WebRepo.Arn]
+              - Effect: Allow
+                Action: [ecs:UpdateService, ecs:DescribeServices]
+                Resource: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:service/${Cluster}/${Service.Name}'
+
+  Build:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      ServiceRole: !GetAtt BuildRole.Arn
+      TimeoutInMinutes: 40
+      Artifacts: {Type: CODEPIPELINE}
+      Source: {Type: CODEPIPELINE, BuildSpec: deploy/aws/buildspec.yml}
+      Environment:
+        Type: ARM_CONTAINER
+        Image: aws/codebuild/amazonlinux-aarch64-standard:3.0
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - {Name: API_REPO_URI, Value: !GetAtt ApiRepo.RepositoryUri}
+          - {Name: WEB_REPO_URI, Value: !GetAtt WebRepo.RepositoryUri}
+          - {Name: ECS_CLUSTER, Value: !Ref Cluster}
+          - {Name: ECS_SERVICE, Value: !GetAtt Service.Name}
+      LogsConfig: {CloudWatchLogs: {Status: ENABLED}}
+
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement: [{Effect: Allow, Principal: {Service: codepipeline.amazonaws.com}, Action: 'sts:AssumeRole'}]
+      Policies:
+        - PolicyName: pipeline
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: [s3:GetObject, s3:GetObjectVersion, s3:GetBucketVersioning, s3:PutObject, s3:ListBucket]
+                Resource: [!GetAtt SourceBucket.Arn, !Sub '${SourceBucket.Arn}/*', !GetAtt ArtifactBucket.Arn, !Sub '${ArtifactBucket.Arn}/*']
+              - Effect: Allow
+                Action: [codebuild:StartBuild, codebuild:BatchGetBuilds]
+                Resource: !GetAtt Build.Arn
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      PipelineType: V1
+      RoleArn: !GetAtt PipelineRole.Arn
+      ArtifactStore: {Type: S3, Location: !Ref ArtifactBucket}
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceZip
+              ActionTypeId: {Category: Source, Owner: AWS, Provider: S3, Version: '1'}
+              Configuration: {S3Bucket: !Ref SourceBucket, S3ObjectKey: source.zip, PollForSourceChanges: 'true'}
+              OutputArtifacts: [{Name: Source}]
+        - Name: BuildTestDeploy
+          Actions:
+            - Name: Build
+              ActionTypeId: {Category: Build, Owner: AWS, Provider: CodeBuild, Version: '1'}
+              Configuration: {ProjectName: !Ref Build}
+              InputArtifacts: [{Name: Source}]
+
+Outputs:
+  SiteUrl:
+    Description: Store address (admin is at /admin, from AdminCidr only)
+    Value: !Sub 'http://${Alb.DNSName}'
+  SourceBucketName:
+    Value: !Ref SourceBucket
+  PipelineName:
+    Value: !Ref Pipeline
+  AdminPasswordSecretArn:
+    Value: !Ref AdminSecret
+  RazorpaySecretArn:
+    Value: !Ref RazorpaySecret
+  ClusterName:
+    Value: !Ref Cluster
+  ServiceName:
+    Value: !GetAtt Service.Name
+  LogGroupName:
+    Value: !Ref Logs
+  MediaBucketName:
+    Value: !Ref MediaBucket
+  DatabaseEndpoint:
+    Value: !GetAtt Db.Endpoint.Address

@@ -1,0 +1,6 @@
+target/
+.idea/
+*.iml
+.pgdata/
+config/
+media-uploads/

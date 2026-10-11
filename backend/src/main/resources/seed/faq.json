@@ -1,0 +1,66 @@
+[
+  {
+    "cat": "sizing",
+    "home": true,
+    "q": "Do your sneakers run true to size?",
+    "a": "Most do. Rally Mid and Everyday Arc run half a size large and Ridge Form runs slightly small. Every product page has a fit note written from our returns data."
+  },
+  {
+    "cat": "sizing",
+    "home": true,
+    "q": "I am between sizes. Which should I order?",
+    "a": "Order both. With our two sizes, one return promise, you keep the pair that fits and send the other back free with the prepaid label in the box."
+  },
+  {
+    "cat": "sizing",
+    "q": "Do you make wide sizes?",
+    "a": "Tide One, Drift Knit, Yard Runner and Metro Quiet come in Wide for ₹799 more. Wide adds 4 mm across the forefoot on the same sole."
+  },
+  {
+    "cat": "orders",
+    "home": true,
+    "q": "When will my order arrive?",
+    "a": "Standard delivery takes 3-5 working days across India and is free over ₹12,000. Express arrives the next working day when you order by 2pm, Monday to Thursday."
+  },
+  {
+    "cat": "orders",
+    "q": "Can I change or cancel an order?",
+    "a": "Yes, until it leaves Marlowe. Orders placed before 2pm usually ship the same afternoon, so write to us as soon as you can."
+  },
+  {
+    "cat": "orders",
+    "q": "Do you ship outside India?",
+    "a": "Yes, to selected countries for ₹1,999, in 7-10 working days. Import duties and taxes are payable on delivery."
+  },
+  {
+    "cat": "returns",
+    "home": true,
+    "q": "Can I return shoes I have worn outside?",
+    "a": "Yes. The 60-day wear test covers pairs worn outside, on runs and on the commute, as long as they are not damaged beyond normal wear."
+  },
+  {
+    "cat": "returns",
+    "q": "How long do refunds take?",
+    "a": "Three working days from when the parcel arrives at Marlowe, back to your original payment method."
+  },
+  {
+    "cat": "returns",
+    "q": "Which models can be resoled?",
+    "a": "Every model except Drift Knit, whose knit and foam are bonded as one piece. A resole costs ₹3,499 and takes about ten working days."
+  },
+  {
+    "cat": "care",
+    "q": "How should I clean knit uppers?",
+    "a": "Remove the laces and insole, then use cold water, a drop of mild soap and a soft brush. Air dry away from direct heat."
+  },
+  {
+    "cat": "care",
+    "q": "How do I look after suede?",
+    "a": "Brush off dry dirt with a suede brush, lift marks with a suede eraser, and use a water-repellent spray before the first wear."
+  },
+  {
+    "cat": "care",
+    "q": "Can they go in the washing machine?",
+    "a": "Please do not. Heat weakens the adhesive that makes resoling possible. Hand washing takes ten minutes and keeps them resolable."
+  }
+]

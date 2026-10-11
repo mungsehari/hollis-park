@@ -1,0 +1,6 @@
+# Local development: the project's own PostgreSQL (backend/scripts/local-db.sh, port 5439).
+# The bootstrap admin below is for this machine only. Production reads ADMIN_EMAIL / ADMIN_PASSWORD.
+store:
+  bootstrap-admin:
+    email: ${ADMIN_EMAIL:admin@hollispark.local}
+    password: ${ADMIN_PASSWORD:local-admin-change-me}

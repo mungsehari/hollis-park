@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: store-api
+  profiles:
+    default: local
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5439/hollis_park}
+    username: ${DB_USERNAME:hollis}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate      # the schema is owned by Flyway (src/main/resources/db/migration)
+  flyway:
+    enabled: true
+  session:
+    jdbc:
+      initialize-schema: never
+  jackson:
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 9MB
+
+server:
+  port: 8080
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+  servlet:
+    session:
+      timeout: 8h
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+# Storefront settings. Brand, market format and size rules are fixed here.
+# Tax, delivery fees and promo codes are only the first-start defaults:
+# after that they live in the database and are edited in the admin panel.
+store:
+  name: Hollis Park
+  store-name: Marlowe
+  order-prefix: "HP-"
+  locale: en-IN
+  currency: INR
+  size-label: US
+  postcode:
+    label: PIN code
+    pattern: "[0-9]{6}"
+    hint: Use a 6-digit PIN code.
+    numeric: true
+  defaults:
+    tax-mode: included
+    tax-rate: 0
+    tax-name: GST
+    free-ship-from: 12000
+    ship-fee: 149
+    express-fee: 349
+    promo-codes:
+      HOLLIS10: 0.10
+  # First admin account, created only when there are no staff users yet.
+  bootstrap-admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+    name: ${ADMIN_NAME:Store owner}
+  cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:5175}
+  # Razorpay payments. Leave the keys empty and checkout records the order without
+  # taking payment. Use rzp_test_ keys for demo (test mode) and rzp_live_ for real money.
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:}
+    key-secret: ${RAZORPAY_KEY_SECRET:}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+  # Where uploaded images go. 'local' writes to a folder and serves it at /media;
+  # 's3' writes to a bucket that CloudFront serves at /media.
+  media:
+    storage: ${MEDIA_STORAGE:local}
+    local-dir: ${MEDIA_DIR:./media-uploads}
+    bucket: ${MEDIA_BUCKET:}
+    region: ${AWS_REGION:ap-south-1}
+    public-base-url: ${MEDIA_BASE_URL:/media}

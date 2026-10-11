@@ -1,0 +1,11 @@
+# Copy this file to backend/config/application-local.yml (same folder) and fill in your keys.
+# That copy is ignored by git, and Spring Boot loads it automatically when the API starts
+# from the backend folder. Restart the API after saving.
+#
+# Razorpay dashboard -> switch to TEST MODE -> Account & Settings -> API Keys -> Generate Test Key.
+store:
+  razorpay:
+    key-id: rzp_test_xxxxxxxxxxxxxx
+    key-secret: xxxxxxxxxxxxxxxxxxxxxxxx
+    # Optional: only needed if you set up a webhook (see README, "Online payments").
+    webhook-secret: ""

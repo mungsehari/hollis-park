@@ -1,0 +1,118 @@
+[
+  {
+    "id": "running",
+    "name": "Running",
+    "img": "col-running",
+    "alt": "A runner's feet in Tide One on a riverside path in soft morning light",
+    "tagline": "Light, cushioned and ready for daily miles.",
+    "intro": "Two road shoes built around one idea: enough foam to protect your legs, not so much that the ground disappears. Tide One is the quicker daily trainer. Drift Knit is softer, for long runs and long shifts.",
+    "choose": [
+      "Choose Tide One for a lighter, quicker feel and a heel that locks in.",
+      "Choose Drift Knit for the deepest cushioning and a sock-like knit fit."
+    ],
+    "guide": [
+      {
+        "icon": "footprints",
+        "t": "Match the foam to the distance",
+        "p": "Mostly under 10 km? Tide One. Regular long runs or all day on your feet? Drift Knit."
+      },
+      {
+        "icon": "ruler",
+        "t": "Leave a thumb of room",
+        "p": "Feet swell on longer runs. Aim for about 1 cm between your longest toe and the front of the shoe."
+      },
+      {
+        "icon": "return",
+        "t": "Test them on real runs",
+        "p": "The 60-day wear test covers road miles. Run in them properly before you decide."
+      }
+    ]
+  },
+  {
+    "id": "basketball",
+    "name": "Basketball",
+    "img": "col-basketball",
+    "alt": "A player laces Rally Mid high-tops on a wooden bench beside an indoor court",
+    "tagline": "Court shapes with lockdown and grip.",
+    "intro": "Leather court shoes with firm heel cups and herringbone outsoles. Rally Mid is the high-top for pickup games. Loop Strap adds a strap and a lower collar for studio, court and street.",
+    "choose": [
+      "Choose Rally Mid for ankle support and the most grip on dusty floors.",
+      "Choose Loop Strap for a lighter mid-top you can wear off court too."
+    ],
+    "guide": [
+      {
+        "icon": "shield",
+        "t": "Lockdown before cushioning",
+        "p": "On court, a heel that stays put matters more than soft foam. Lace to the top eyelet and check for heel lift."
+      },
+      {
+        "icon": "ruler",
+        "t": "Size down in Rally Mid",
+        "p": "Rally Mid runs half a size large. Loop Strap is true to size."
+      },
+      {
+        "icon": "clock",
+        "t": "Allow a week to break in",
+        "p": "Full-grain leather softens after three or four sessions. Wear them around the house first."
+      }
+    ]
+  },
+  {
+    "id": "training",
+    "name": "Training",
+    "img": "col-training",
+    "alt": "Moss green Yard Runner training shoes beside a kettlebell and a rolled mat in a sage studio",
+    "tagline": "Low, stable shoes for the gym and the trailhead.",
+    "intro": "Yard Runner sits low and wide for lifting and classes. Ridge Form adds suede, a toe bumper and 4 mm lugs for gravel paths and wet grass.",
+    "choose": [
+      "Choose Yard Runner for lifting, classes and short runs on the treadmill.",
+      "Choose Ridge Form for towpaths, gravel and anything that gets muddy."
+    ],
+    "guide": [
+      {
+        "icon": "footprints",
+        "t": "Low for lifting",
+        "p": "A 4 mm drop and a flat base keep you planted under a bar. Save the thick foam for running."
+      },
+      {
+        "icon": "leaf",
+        "t": "Lugs for loose ground",
+        "p": "Ridge Form grips on gravel and grass but stays quiet on pavement, so you can run to the trail."
+      },
+      {
+        "icon": "hammer",
+        "t": "Resole the toe-draggers",
+        "p": "Training wears the forefoot first. Both models can be resoled for ₹3,499."
+      }
+    ]
+  },
+  {
+    "id": "lifestyle",
+    "name": "Lifestyle",
+    "img": "col-lifestyle",
+    "alt": "Everyday Arc canvas sneakers with ecru trousers on a stone bench in a quiet city square",
+    "tagline": "Pairs for every day that is not a run.",
+    "intro": "Metro Quiet is a late-seventies runner in layered suede with softer foam. Everyday Arc is a vulcanized canvas low-top that goes with everything. Both are built to be resoled.",
+    "choose": [
+      "Choose Metro Quiet for all-day cushioning and a retro running shape.",
+      "Choose Everyday Arc for a flat, flexible canvas classic under ₹8,000."
+    ],
+    "guide": [
+      {
+        "icon": "clock",
+        "t": "Built for all-day wear",
+        "p": "Removable cork-blend insoles and roomy toe boxes keep them comfortable from the commute to dinner."
+      },
+      {
+        "icon": "leaf",
+        "t": "Suede or canvas",
+        "p": "Suede looks sharper and wants a brush. Canvas goes out in any weather and softens with age."
+      },
+      {
+        "icon": "hammer",
+        "t": "Keep them for years",
+        "p": "When the sole wears through, we replace it and clean the upper for ₹3,499."
+      }
+    ]
+  }
+]

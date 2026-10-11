@@ -1,0 +1,6 @@
+target/
+.idea/
+*.iml
+.DS_Store
+media-uploads/
+config/application-local.yml

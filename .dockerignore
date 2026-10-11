@@ -1,0 +1,7 @@
+node_modules/
+**/node_modules/
+**/dist/
+backend/target/
+backend/.pgdata/
+backend/media-uploads/
+backend/config/

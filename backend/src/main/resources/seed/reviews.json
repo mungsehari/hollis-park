@@ -1,0 +1,162 @@
+[
+  {
+    "product": "tide-one",
+    "name": "Maya Ellison",
+    "place": "Oakland, CA",
+    "size": "US 8",
+    "fit": 0,
+    "rating": 5,
+    "date": "Sep 2026",
+    "text": "Ran a half marathon in them in week three with no hot spots. The rocker takes a couple of runs to trust, then you stop noticing it."
+  },
+  {
+    "product": "tide-one",
+    "name": "Diego Ruiz",
+    "place": "Austin, TX",
+    "size": "US 10",
+    "fit": 0,
+    "rating": 5,
+    "date": "Aug 2026",
+    "text": "Lighter than my old daily trainer and the heel counter actually holds. The clay is warmer in person than in photos."
+  },
+  {
+    "product": "drift-knit",
+    "name": "Naomi Clarke",
+    "place": "Columbus, OH",
+    "size": "US 7.5",
+    "fit": 0,
+    "rating": 5,
+    "date": "Sep 2026",
+    "text": "Wore them for two ten-hour shifts on a hospital ward. My feet were tired, not sore, which is a first."
+  },
+  {
+    "product": "drift-knit",
+    "name": "Peter Wong",
+    "place": "Seattle, WA",
+    "size": "US 9",
+    "fit": -1,
+    "rating": 4,
+    "date": "Sep 2026",
+    "text": "Snug for the first week, then the knit relaxed. Glad I followed the advice and stayed in my usual size."
+  },
+  {
+    "product": "rally-mid",
+    "name": "Isaac Bell",
+    "place": "Chicago, IL",
+    "size": "US 11",
+    "fit": 1,
+    "rating": 5,
+    "date": "Jul 2026",
+    "text": "Went half a size down as the page suggested and it was right. Heel lockdown is excellent for pickup."
+  },
+  {
+    "product": "rally-mid",
+    "name": "Colin Reyes",
+    "place": "Brooklyn, NY",
+    "size": "US 10.5",
+    "fit": 1,
+    "rating": 5,
+    "date": "Jun 2026",
+    "text": "The forest suede is a deep, proper green. Grip on our dusty community court is far better than my old pair."
+  },
+  {
+    "product": "loop-strap",
+    "name": "Lena Park",
+    "place": "San Jose, CA",
+    "size": "US 7",
+    "fit": 0,
+    "rating": 5,
+    "date": "Aug 2026",
+    "text": "The strap makes them feel secure in dance class without being stiff. Took about a week to soften."
+  },
+  {
+    "product": "loop-strap",
+    "name": "Victor Lang",
+    "place": "Providence, RI",
+    "size": "US 9.5",
+    "fit": 0,
+    "rating": 4,
+    "date": "Jul 2026",
+    "text": "Sharp with wide trousers. The leather creased a little at the toe, which I expected."
+  },
+  {
+    "product": "ridge-form",
+    "name": "Ada Okafor",
+    "place": "Pittsburgh, PA",
+    "size": "US 8.5",
+    "fit": -1,
+    "rating": 5,
+    "date": "May 2026",
+    "text": "Took them on the canal towpath in the rain and my feet stayed dry. Sized up half as advised for thick socks."
+  },
+  {
+    "product": "ridge-form",
+    "name": "Felix Grant",
+    "place": "Boulder, CO",
+    "size": "US 11",
+    "fit": 0,
+    "rating": 4,
+    "date": "Apr 2026",
+    "text": "Grippy on gravel and not clunky on the road to get there. The toggle laces are quicker than I expected."
+  },
+  {
+    "product": "yard-runner",
+    "name": "Tessa Hart",
+    "place": "Minneapolis, MN",
+    "size": "US 9 Wide",
+    "fit": 0,
+    "rating": 5,
+    "date": "Aug 2026",
+    "text": "Stable enough for deadlifts, soft enough for the 2 km warm-up. The wide toe box suits my feet."
+  },
+  {
+    "product": "yard-runner",
+    "name": "Omar Haidar",
+    "place": "Miami, FL",
+    "size": "US 10",
+    "fit": 0,
+    "rating": 4,
+    "date": "Jul 2026",
+    "text": "Burpees wore through my last pair in four months. These look barely touched after the same."
+  },
+  {
+    "product": "metro-quiet",
+    "name": "Imani Brooks",
+    "place": "Boston, MA",
+    "size": "US 7",
+    "fit": 0,
+    "rating": 5,
+    "date": "Sep 2026",
+    "text": "Wore them on a four-day city trip, about 60 km in total. The suede still looks new after a brush."
+  },
+  {
+    "product": "metro-quiet",
+    "name": "Rosa Vega",
+    "place": "Denver, CO",
+    "size": "US 9.5",
+    "fit": 0,
+    "rating": 5,
+    "date": "Aug 2026",
+    "text": "Ordered two sizes, kept the 9.5 and sent the 9 back with the label in the box. No questions asked."
+  },
+  {
+    "product": "everyday-arc",
+    "name": "June Alvarez",
+    "place": "Portland, ME",
+    "size": "US 6.5",
+    "fit": 1,
+    "rating": 5,
+    "date": "Jun 2026",
+    "text": "My Everyday Arcs came back from resoling looking like a new pair for ₹3,499. Bought a second pair anyway."
+  },
+  {
+    "product": "everyday-arc",
+    "name": "Kenji Mori",
+    "place": "Dearborn, MI",
+    "size": "US 10",
+    "fit": 1,
+    "rating": 4,
+    "date": "May 2026",
+    "text": "Runs large like they say. Half a size down was perfect, and the gum sole flexes straight out of the box."
+  }
+]
