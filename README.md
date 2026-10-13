@@ -48,6 +48,7 @@ cd admin && npm run build
 | Homepage: hero photo and headline, banner, featured pair | edit | view |
 | Collections: photo, text, tips, order, show / hide | edit | view |
 | Media: upload, browse and delete images | yes | view |
+| Care picks (Amazon / Flipkart affiliate links) | edit | view |
 | Tax and delivery | edit | view |
 | Promo codes, Staff accounts | yes | no |
 
@@ -82,6 +83,23 @@ as `RAZORPAY_WEBHOOK_SECRET`. Locally this needs a tunnel (for example ngrok).
 
 Orders placed with payment on wait as **Awaiting payment** (staff can only cancel
 them) until paid; they are left out of revenue until then.
+
+## Amazon / Flipkart links and care picks
+
+- **Products:** in Products → a product → *Also sold on*, add the Amazon and/or Flipkart link
+  (your affiliate link if you have one). The product page then shows *Also on Amazon / Flipkart*
+  under the store's own Add to bag. Leave both empty to hide them.
+- **Care picks:** Content → *Care picks*. Socks, cleaners, insoles and the like, each with a photo,
+  a marketplace and a link. They appear on the homepage ("Care for your pair") and on `/care`.
+  The four seeded picks use plain marketplace search links; replace them with your affiliate links.
+- **Click tracking:** every link goes through `/api/go/...`, which counts the click (what was
+  clicked and where; no personal data) and then redirects. The dashboard shows clicks per
+  marketplace and the most followed items for the last 30 days.
+- **Safety:** only `https` links on the marketplace's own domains (amazon.in, amzn.to, flipkart.com,
+  fkrt.it, ...) are accepted, so the redirect cannot be abused to send people elsewhere.
+- **Rules:** the store shows an affiliate disclosure next to these links and in the footer, and the
+  links carry `rel="sponsored"`. Amazon Associates also expects prices on your site to be current, so
+  the picks deliberately show no price.
 
 ## Security
 

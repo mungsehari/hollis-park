@@ -199,6 +199,18 @@ export function ProductEdit() {
             {p.wide && <Field><FieldLabel htmlFor="wide-extra">Wide costs extra</FieldLabel><Money id="wide-extra" value={p.wide.extra} onChange={(n) => set("wide", { ...p.wide!, extra: n })} /></Field>}
           </Section>
 
+          <Section title="Also sold on" description="Optional. Shows 'Also on Amazon / Flipkart' buttons under Add to bag; clicks are counted on the dashboard.">
+            <Field>
+              <FieldLabel htmlFor="amazon-url">Amazon link</FieldLabel>
+              <Input id="amazon-url" type="url" inputMode="url" value={p.amazonUrl ?? ""} onChange={(e) => set("amazonUrl", e.target.value.trim() || null)} placeholder="https://www.amazon.in/dp/... or https://amzn.to/..." />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="flipkart-url">Flipkart link</FieldLabel>
+              <Input id="flipkart-url" type="url" inputMode="url" value={p.flipkartUrl ?? ""} onChange={(e) => set("flipkartUrl", e.target.value.trim() || null)} placeholder="https://www.flipkart.com/..." />
+              <FieldDescription>Use your affiliate link if you have one. Leave empty to hide the button.</FieldDescription>
+            </Field>
+          </Section>
+
           <Section title="Photos" description="The first photo is the main one. Shoppers see the second photo when they hover a product card.">
             <ul className="grid grid-cols-3 gap-2">
               {p.gallery.map((url, i) => (

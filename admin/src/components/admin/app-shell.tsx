@@ -1,8 +1,9 @@
+import { MotionConfig, motion } from "motion/react"
 import { useState, type FormEvent, type ReactNode } from "react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router"
 import {
   ChevronsUpDownIcon, ExternalLinkIcon, InboxIcon, KeyRoundIcon, LayoutDashboardIcon, LogOutIcon, MailIcon, MoonIcon,
-  ImageIcon, LayoutPanelTopIcon, LayersIcon, PackageIcon, SettingsIcon, ShoppingBagIcon, SunIcon, TicketPercentIcon, UsersIcon,
+  ImageIcon, LayoutPanelTopIcon, LayersIcon, PackageIcon, SettingsIcon, ShoppingBagIcon, SparklesIcon, SunIcon, TicketPercentIcon, UsersIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useTheme } from "@/components/theme-provider"
@@ -38,6 +39,7 @@ const CONTENT: NavItem[] = [
   { to: "/home", label: "Homepage", icon: <LayoutPanelTopIcon /> },
   { to: "/collections", label: "Collections", icon: <LayersIcon /> },
   { to: "/media", label: "Media", icon: <ImageIcon /> },
+  { to: "/care-picks", label: "Care picks", icon: <SparklesIcon /> },
 ]
 const STORE: NavItem[] = [
   { to: "/promo-codes", label: "Promo codes", icon: <TicketPercentIcon />, role: "ADMIN" },
@@ -166,7 +168,9 @@ function UserMenu() {
 }
 
 export function AppShell({ badges }: { badges?: Record<string, number> }) {
+  const { pathname } = useLocation()
   return (
+    <MotionConfig reducedMotion="user">
     <SidebarProvider>
       <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader>
@@ -198,9 +202,19 @@ export function AppShell({ badges }: { badges?: Record<string, number> }) {
           <span className="text-sm text-muted-foreground">Hollis Park admin</span>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto w-full max-w-7xl space-y-6"><Outlet /></div>
+          {/* Each page slides in softly; no exit animation, so navigation never waits. */}
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="mx-auto w-full max-w-7xl space-y-6"
+          >
+            <Outlet />
+          </motion.div>
         </main>
       </SidebarInset>
     </SidebarProvider>
+    </MotionConfig>
   )
 }

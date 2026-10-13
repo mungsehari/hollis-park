@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.hollispark.store.config.StoreProperties;
+import com.hollispark.store.domain.CarePick;
+import com.hollispark.store.domain.CarePickRepository;
 import com.hollispark.store.domain.CollectionEntity;
 import com.hollispark.store.domain.CollectionRepository;
 import com.hollispark.store.domain.GuideItem;
@@ -17,6 +19,7 @@ import com.hollispark.store.domain.StaffUser;
 import com.hollispark.store.domain.StaffUserRepository;
 import com.hollispark.store.domain.StoreSettings;
 import com.hollispark.store.domain.StoreSettingsRepository;
+import com.hollispark.store.dto.CarePickDtos.CarePickDto;
 import com.hollispark.store.dto.ProductDto;
 import com.hollispark.store.dto.ReviewDto;
 import java.io.IOException;
@@ -55,11 +58,13 @@ public class CatalogSeeder implements ApplicationRunner {
     private final MediaService media;
     private final CollectionRepository collections;
     private final HomeContentService home;
+    private final CarePickRepository picks;
 
     public CatalogSeeder(ProductRepository products, ReviewRepository reviews, StoreSettingsRepository settings,
                          PromoCodeRepository promos, StaffUserRepository staff, PasswordEncoder encoder,
                          StoreProperties props, ObjectMapper mapper, MediaService media,
-                         CollectionRepository collections, HomeContentService home) {
+                         CollectionRepository collections, HomeContentService home, CarePickRepository picks) {
+        this.picks = picks;
         this.products = products;
         this.reviews = reviews;
         this.settings = settings;
@@ -111,6 +116,7 @@ public class CatalogSeeder implements ApplicationRunner {
                     promos.save(PromoCode.builder().code(code.toUpperCase()).rate(rate).build()));
         }
         if (!home.exists()) home.save(HomeContentService.defaults(images.get("hero-portrait")));
+        if (picks.count() == 0) seedCarePicks();
         bootstrapAdmin();
     }
 
@@ -164,6 +170,18 @@ public class CatalogSeeder implements ApplicationRunner {
                     .build());
         }
         log.info("Seeded {} collections", list.size());
+    }
+
+    /** Example picks with plain marketplace search links; replace them with your affiliate links in the admin panel. */
+    private void seedCarePicks() throws IOException {
+        List<CarePickDto> list = read("seed/care-picks.json", new TypeReference<>() {});
+        int order = 0;
+        for (CarePickDto dto : list) {
+            CarePick p = CarePick.builder().build();
+            new CarePickDto(null, dto.title(), dto.blurb(), dto.image(), dto.marketplace(), dto.url(), order++, true).applyTo(p);
+            picks.save(p);
+        }
+        log.info("Seeded {} care picks", list.size());
     }
 
     private void bootstrapAdmin() {

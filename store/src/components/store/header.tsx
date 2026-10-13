@@ -143,7 +143,7 @@ export function Header() {
             <HeartIcon />
             {saved.length > 0 && <span className="absolute top-1 right-1 size-2 rounded-full bg-sage" />}
           </Button>
-          <Button variant="ghost" size="icon-lg" className={iconBtn} aria-label={`Open bag, ${items} ${items === 1 ? "item" : "items"}`} onClick={() => setBagOpen(true)}>
+          <Button data-bag-target variant="ghost" size="icon-lg" className={iconBtn} aria-label={`Open bag, ${items} ${items === 1 ? "item" : "items"}`} onClick={() => setBagOpen(true)}>
             <ShoppingBagIcon />
             <AnimatePresence>
               {items > 0 && (

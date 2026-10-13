@@ -1,9 +1,11 @@
 package com.hollispark.store.service;
 
 import com.hollispark.store.config.StoreProperties;
+import com.hollispark.store.domain.CarePickRepository;
 import com.hollispark.store.domain.CollectionRepository;
 import com.hollispark.store.domain.ProductRepository;
 import com.hollispark.store.domain.ReviewRepository;
+import com.hollispark.store.dto.CarePickDtos.PublicPick;
 import com.hollispark.store.dto.ContentDtos.CollectionDto;
 import com.hollispark.store.dto.ProductDto;
 import com.hollispark.store.dto.ReviewDto;
@@ -30,7 +32,7 @@ public class StorefrontService {
 
     /** One consistent view of the live catalog. {@code bootstrap} is the whole /api/store payload. */
     public record Snapshot(Map<String, Object> bootstrap, List<ProductDto> products, List<CollectionDto> collections,
-                           List<ReviewDto> reviews) {}
+                           List<ReviewDto> reviews, List<PublicPick> picks) {}
 
     private final StoreProperties props;
     private final StaticContent content;
@@ -39,13 +41,15 @@ public class StorefrontService {
     private final CollectionRepository collectionRepo;
     private final SettingsService settings;
     private final HomeContentService home;
+    private final CarePickRepository pickRepo;
     private final CacheManager cacheManager;
 
     public StorefrontService(StoreProperties props, StaticContent content, ProductRepository productRepo,
                              ReviewRepository reviewRepo, CollectionRepository collectionRepo,
-                             SettingsService settings, HomeContentService home,
+                             SettingsService settings, HomeContentService home, CarePickRepository pickRepo,
                              CacheManager cacheManager) {
         this.cacheManager = cacheManager;
+        this.pickRepo = pickRepo;
         this.props = props;
         this.content = content;
         this.productRepo = productRepo;
@@ -64,6 +68,8 @@ public class StorefrontService {
                 .filter(r -> liveIds.contains(r.getProductSlug())).map(ReviewDto::of).toList();
         List<CollectionDto> collections = collectionRepo.findAllByActiveTrueOrderBySortOrderAsc().stream()
                 .map(CollectionDto::of).toList();
+        List<PublicPick> picks = pickRepo.findAllByActiveTrueOrderBySortOrderAscCreatedAtAsc().stream()
+                .map(PublicPick::of).toList();
 
         Map<String, Object> site = new LinkedHashMap<>();
         site.put("name", props.name());
@@ -98,7 +104,8 @@ public class StorefrontService {
         bootstrap.put("colours", content.colours);
         bootstrap.put("products", products);
         bootstrap.put("reviews", reviews);
-        return new Snapshot(java.util.Collections.unmodifiableMap(bootstrap), products, collections, reviews);
+        bootstrap.put("picks", picks);
+        return new Snapshot(java.util.Collections.unmodifiableMap(bootstrap), products, collections, reviews, picks);
     }
 
     private void evict() {

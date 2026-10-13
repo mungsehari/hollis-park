@@ -11,7 +11,8 @@ public record ProductDto(
         List<String> colours, int price, WideOption wide, double rating, int reviews, String flag,
         int rank, String added, String img, String context, String contextCaption, String alt,
         String blurb, String desc, List<List<String>> specs, List<List<String>> materials,
-        FitNote fit, String care, List<Double> soldOut, List<Double> low, String keywords, List<String> gallery) {
+        FitNote fit, String care, List<Double> soldOut, List<Double> low, String keywords, List<String> gallery,
+        String amazonUrl, String flipkartUrl) {
 
     public static ProductDto of(Product p) {
         List<String> gallery = p.getGallery() == null || p.getGallery().isEmpty()
@@ -20,7 +21,7 @@ public record ProductDto(
                 p.getSwatch(), p.getColours(), p.getPrice(), p.getWide(), p.getRating(), p.getReviewCount(),
                 p.getFlag(), p.getSortRank(), p.getAddedOn(), p.getImg(), p.getContextImg(), p.getContextCaption(),
                 p.getAlt(), p.getBlurb(), p.getDescription(), p.getSpecs(), p.getMaterials(), p.getFit(), p.getCare(),
-                p.getSoldOut(), p.getLow(), p.getKeywords(), gallery);
+                p.getSoldOut(), p.getLow(), p.getKeywords(), gallery, p.getAmazonUrl(), p.getFlipkartUrl());
     }
 
     public Product toEntity() {
@@ -34,6 +35,11 @@ public record ProductDto(
                 .specs(specs).materials(materials).fit(fit).care(care)
                 .soldOut(soldOut == null ? List.of() : soldOut).low(low == null ? List.of() : low)
                 .keywords(keywords).gallery(photos)
+                .amazonUrl(blankToNull(amazonUrl)).flipkartUrl(blankToNull(flipkartUrl))
                 .build();
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
     }
 }

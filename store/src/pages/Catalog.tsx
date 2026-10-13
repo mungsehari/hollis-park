@@ -144,9 +144,11 @@ export function Catalog() {
           </div>
 
           {results.length ? (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-10 xl:grid-cols-3 lg:gap-x-6">
-              {results.map((p: Product) => <ProductCard key={p.id} p={p} />)}
-            </div>
+            <motion.div layout className="grid grid-cols-2 gap-x-4 gap-y-10 xl:grid-cols-3 lg:gap-x-6">
+              <AnimatePresence mode="popLayout" initial={false}>
+                {results.map((p: Product) => <ProductCard key={p.id} p={p} />)}
+              </AnimatePresence>
+            </motion.div>
           ) : (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3 rounded-3xl border border-dashed py-20 text-center">
               <span className="flex size-14 items-center justify-center rounded-full bg-muted"><FootprintsIcon className="size-6" /></span>

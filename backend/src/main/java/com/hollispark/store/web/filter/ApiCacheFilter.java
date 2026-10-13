@@ -33,7 +33,8 @@ public class ApiCacheFilter {
                 throws ServletException, IOException {
             String uri = req.getRequestURI();
             boolean readOnly = "GET".equals(req.getMethod()) || "HEAD".equals(req.getMethod());
-            boolean catalogRead = readOnly && !uri.startsWith("/api/admin") && !uri.startsWith("/api/auth");
+            boolean catalogRead = readOnly && !uri.startsWith("/api/admin") && !uri.startsWith("/api/auth")
+                    && !uri.startsWith("/api/go/");
             res.setHeader(HttpHeaders.CACHE_CONTROL, catalogRead ? "public, no-cache" : "no-store");
             chain.doFilter(req, res);
         }

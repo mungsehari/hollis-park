@@ -183,3 +183,15 @@
   html { scroll-behavior: auto; }
   .marquee { animation: none; }
 }
+
+/* Loading placeholders: a soft light sweeps across (see components/store/skeletons.tsx). */
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.skeleton-shimmer { position: relative; overflow: hidden; background-color: var(--muted); }
+.skeleton-shimmer::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--background) 60%, transparent), transparent);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer::after { animation: none; }
+}

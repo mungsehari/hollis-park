@@ -17,6 +17,8 @@ import { useShop } from "@/state/store"
 import { Eyebrow, SectionTitle } from "@/components/store/brand"
 import { EASE, Reveal } from "@/components/store/motion"
 import { Crumbs, useTitle } from "@/components/store/page"
+import { FLIGHT_MS, flyToBag } from "@/components/store/fly-to-bag"
+import { AlsoOn } from "@/components/store/marketplace"
 import { ProductCard } from "@/components/store/product-card"
 import { NotFound } from "./NotFound"
 
@@ -43,6 +45,7 @@ function Gallery({ p }: { p: P }) {
         ))}
       </div>
       <div
+        data-product-photo
         className="relative order-1 aspect-square overflow-hidden rounded-3xl bg-muted lg:order-2"
         onPointerMove={fine ? (e) => { const r = e.currentTarget.getBoundingClientRect(); setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 }) } : undefined}
         onPointerLeave={fine ? () => setZoom(null) : undefined}
@@ -120,11 +123,13 @@ function ProductView({ p }: { p: P }) {
       return
     }
     setAdding("loading")
-    await new Promise((r) => setTimeout(r, 450))
+    const flew = flyToBag(p.img, document.querySelector("[data-product-photo]"))
+    await new Promise((r) => setTimeout(r, flew ? FLIGHT_MS : 450))
     addToCart(p.id, size, width)
     setAdding("done")
-    setBagOpen(true)
     toast.success(`${p.name}, ${sizeLabel} ${size} added to your bag`)
+    // let the bag badge bounce before the drawer slides over it
+    setTimeout(() => setBagOpen(true), flew ? 250 : 0)
     setTimeout(() => setAdding("idle"), 1500)
   }
 
@@ -211,6 +216,8 @@ function ProductView({ p }: { p: P }) {
               <HeartIcon className={cn(on && "fill-destructive text-destructive")} />
             </Button>
           </div>
+
+          <AlsoOn p={p} />
 
           <ul className="mt-6 space-y-3 rounded-2xl bg-muted p-4 text-sm">
             <li className="flex gap-3"><TruckIcon className="mt-0.5 size-4 shrink-0" /><span><b>{etaText("standard", locale)}</b> with standard delivery. Free over {money(freeShipFrom)}.</span></li>

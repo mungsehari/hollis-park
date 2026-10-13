@@ -1,5 +1,5 @@
 import { motion, useInView, useMotionValue, useSpring, useTransform, type Variants } from "motion/react"
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react"
 import { cn } from "cn"
 
 /** Premium but calm: short distances, soft easing, nothing bounces. */
@@ -74,4 +74,17 @@ export function CountUp({ value, format = (n: number) => Math.round(n).toLocaleS
   const text = useTransform(spring, (n) => format(n))
   useEffect(() => { if (inView) mv.set(value) }, [inView, mv, value])
   return <motion.span ref={ref} className={className}>{text}</motion.span>
+}
+
+/** Image that fades and sharpens in once it has loaded, instead of popping in line by line. */
+export function FadeImg({ className, onLoad, ...props }: ComponentProps<"img">) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <img
+      {...props}
+      ref={(el) => { if (el?.complete && el.naturalWidth > 0) setLoaded(true) }}
+      onLoad={(e) => { setLoaded(true); onLoad?.(e) }}
+      className={cn("transition-[opacity,filter,transform] duration-700 ease-out", loaded ? "opacity-100 blur-0" : "opacity-0 blur-md", className)}
+    />
+  )
 }

@@ -3,6 +3,7 @@ import { AppShell } from "@/components/admin/app-shell"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { AuthProvider, RequireAuth } from "@/lib/auth"
+import { CarePicks } from "@/pages/CarePicks"
 import { Collections, Homepage, Media } from "@/pages/Content"
 import { Dashboard } from "@/pages/Dashboard"
 import { Login } from "@/pages/Login"
@@ -30,6 +31,7 @@ export function App() {
               <Route path="home" element={<Homepage />} />
               <Route path="collections" element={<Collections />} />
               <Route path="media" element={<Media />} />
+              <Route path="care-picks" element={<CarePicks />} />
               <Route path="messages" element={<Messages />} />
               <Route path="subscribers" element={<Subscribers />} />
               <Route path="settings" element={<Settings />} />

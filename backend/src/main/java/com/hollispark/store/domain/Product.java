@@ -69,6 +69,12 @@ public class Product extends BaseEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     private List<String> gallery;
 
+    /** The same product on Amazon / Flipkart, optional ("Also on ..." on the product page). */
+    @Column(name = "amazon_url")
+    private String amazonUrl;
+    @Column(name = "flipkart_url")
+    private String flipkartUrl;
+
     /** Archived products disappear from the storefront but keep their order history. */
     @Builder.Default
     private boolean active = true;
@@ -77,6 +83,12 @@ public class Product extends BaseEntity {
         if (soldOut != null && soldOut.contains(size)) return false;
         if (!wideWidth) return true;
         return wide != null && (wide.soldOut() == null || !wide.soldOut().contains(size));
+    }
+
+    /** The product's link on that marketplace, or null. */
+    public String marketplaceUrl(Marketplace m) {
+        String url = m == Marketplace.AMAZON ? amazonUrl : flipkartUrl;
+        return url == null || url.isBlank() ? null : url;
     }
 
     public int unitPrice(boolean wideWidth) {
@@ -91,5 +103,6 @@ public class Product extends BaseEntity {
         contextCaption = o.contextCaption; alt = o.alt; blurb = o.blurb; description = o.description;
         care = o.care; keywords = o.keywords; colours = o.colours; wide = o.wide; specs = o.specs;
         materials = o.materials; fit = o.fit; soldOut = o.soldOut; low = o.low; gallery = o.gallery;
+        amazonUrl = o.amazonUrl; flipkartUrl = o.flipkartUrl;
     }
 }

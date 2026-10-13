@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react"
 import { Link } from "react-router"
 import { Radio } from "@base-ui/react/radio"
 import { RadioGroup } from "@base-ui/react/radio-group"
-import { CheckIcon, CreditCardIcon, LockIcon, ShieldCheckIcon } from "lucide-react"
+import { CreditCardIcon, LockIcon, ShieldCheckIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -126,7 +126,7 @@ export function Checkout() {
       <PageShell title="Order received" trail={[["Home", "/"], ["Checkout", null]]}>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
           <div className="rounded-3xl bg-accent p-8 sm:p-12">
-            <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.15 }} className="flex size-14 items-center justify-center rounded-full bg-sage-deep text-white"><CheckIcon className="size-7" /></motion.span>
+            <SuccessMark />
             <h2 className="mt-6 font-heading text-4xl font-extrabold uppercase">Thanks, {done.first}.</h2>
             <p className="mt-3 max-w-lg text-lg text-foreground/80">{done.paid
               ? `Payment received. Your order is with the ${site.store} team. Keep your order number for any questions.`
@@ -235,5 +235,38 @@ export function Checkout() {
         </aside>
       </div>
     </PageShell>
+  )
+}
+
+const BURST = ["#8D9A89", "#2F3A2E", "#E8D9B5", "#C9A27E", "#5B6B57", "#F4F1EA"]
+
+/** Order placed: the circle pops in, the tick draws itself and a small burst of confetti flies out. */
+function SuccessMark() {
+  return (
+    <div className="relative size-14">
+      {Array.from({ length: 16 }, (_, i) => {
+        const angle = (i / 16) * Math.PI * 2
+        const dist = 46 + (i % 3) * 14
+        return (
+          <motion.span
+            key={i}
+            aria-hidden="true"
+            className="absolute top-1/2 left-1/2 size-2 rounded-[2px]"
+            style={{ background: BURST[i % BURST.length] }}
+            initial={{ x: "-50%", y: "-50%", scale: 0, opacity: 1, rotate: 0 }}
+            animate={{ x: `calc(-50% + ${Math.cos(angle) * dist}px)`, y: `calc(-50% + ${Math.sin(angle) * dist}px)`, scale: [0, 1, 0.6], opacity: [1, 1, 0], rotate: 180 + i * 20 }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+          />
+        )
+      })}
+      <motion.span
+        initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.15 }}
+        className="relative flex size-14 items-center justify-center rounded-full bg-sage-deep text-white"
+      >
+        <svg viewBox="0 0 24 24" className="size-7" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <motion.path d="M5 12.5l4.5 4.5L19 7.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, ease: "easeOut", delay: 0.4 }} />
+        </svg>
+      </motion.span>
+    </div>
   )
 }

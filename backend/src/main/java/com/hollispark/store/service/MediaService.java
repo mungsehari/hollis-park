@@ -2,6 +2,7 @@ package com.hollispark.store.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hollispark.store.config.StoreProperties;
+import com.hollispark.store.domain.CarePickRepository;
 import com.hollispark.store.domain.CollectionRepository;
 import com.hollispark.store.domain.Media;
 import com.hollispark.store.domain.MediaRepository;
@@ -27,12 +28,14 @@ public class MediaService {
     private final ProductRepository products;
     private final CollectionRepository collections;
     private final SiteContentRepository content;
+    private final CarePickRepository picks;
     private final ObjectMapper mapper;
     private final String baseUrl;
 
     public MediaService(MediaStorage storage, MediaRepository media, ProductRepository products,
-                        CollectionRepository collections, SiteContentRepository content, ObjectMapper mapper,
-                        StoreProperties props) {
+                        CollectionRepository collections, SiteContentRepository content, CarePickRepository picks,
+                        ObjectMapper mapper, StoreProperties props) {
+        this.picks = picks;
         this.storage = storage;
         this.media = media;
         this.products = products;
@@ -110,6 +113,7 @@ public class MediaService {
                 || (p.getGallery() != null && p.getGallery().contains(url)));
         if (product) return true;
         if (collections.findAll().stream().anyMatch(c -> url.equals(c.getImage()))) return true;
+        if (picks.findAll().stream().anyMatch(p -> url.equals(p.getImage()))) return true;
         return content.findAll().stream().anyMatch(c -> {
             try {
                 return mapper.writeValueAsString(c.getData()).contains("\"" + url + "\"");

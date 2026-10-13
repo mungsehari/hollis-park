@@ -9,7 +9,7 @@ export function Footer() {
   const { data } = useShop()
   const { name, store } = data.site
   const cols: [string, [string, string][]][] = [
-    ["Shop", [["All sneakers", "/catalog"], ...data.collections.map((c) => [c.name, `/collections/${c.id}`] as [string, string]), ["Saved pairs", "/saved"]]],
+    ["Shop", [["All sneakers", "/catalog"], ...data.collections.map((c) => [c.name, `/collections/${c.id}`] as [string, string]), ["Saved pairs", "/saved"], ...((data.picks ?? []).length > 0 ? [["Care picks", "/care"] as [string, string]] : [])]],
     ["Help", [["Size guide", "/size-guide"], ["Delivery and returns", "/delivery"], ["Questions", "/faq"], ["Contact", "/contact"]]],
     ["Company", [["Our story", "/about"], ["Our lines", "/about#lines"], ["Monthly note", "/newsletter"], [`Visit ${store}`, "/contact?topic=fitting"]]],
   ]
@@ -46,7 +46,10 @@ export function Footer() {
           {name}
         </motion.p>
         <div className="flex flex-col gap-3 border-t border-white/10 py-6 text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; 2026 {name}. All rights reserved.</p>
+          <div className="space-y-1">
+            <p>&copy; 2026 {name}. All rights reserved.</p>
+            <p className="text-xs text-white/45">Some links go to Amazon or Flipkart; we may earn a small commission at no extra cost to you.</p>
+          </div>
           <nav className="flex gap-5" aria-label="Legal">
             <Link to="/legal" className="hover:text-white">Privacy</Link>
             <Link to="/legal?tab=terms" className="hover:text-white">Terms of sale</Link>

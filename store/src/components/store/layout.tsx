@@ -1,4 +1,4 @@
-import { motion } from "motion/react"
+import { MotionConfig, motion } from "motion/react"
 import { useEffect, type ReactNode } from "react"
 import { useLocation } from "react-router"
 import { Toaster } from "@/components/ui/sonner"
@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { BagSheet } from "./bag-sheet"
 import { Footer } from "./footer"
 import { AnnouncementBar, Header } from "./header"
+import { FlyToBagLayer } from "./fly-to-bag"
+import { BackToTop, ScrollProgress } from "./scroll-extras"
 import { SearchDialog } from "./search-dialog"
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -16,7 +18,10 @@ export function Layout({ children }: { children: ReactNode }) {
   }, [pathname])
 
   return (
+    // Every animation respects the visitor's "reduce motion" setting.
+    <MotionConfig reducedMotion="user">
     <TooltipProvider delay={150}>
+      <ScrollProgress />
       <a href="#main" className="sr-only z-[100] rounded-full bg-foreground px-4 py-2 text-background focus:not-sr-only focus:fixed focus:top-3 focus:left-3">Skip to content</a>
       <AnnouncementBar />
       <Header />
@@ -35,7 +40,10 @@ export function Layout({ children }: { children: ReactNode }) {
       <Footer />
       <BagSheet />
       <SearchDialog />
+      <BackToTop />
+      <FlyToBagLayer />
       <Toaster position="bottom-center" />
     </TooltipProvider>
+    </MotionConfig>
   )
 }

@@ -2,9 +2,11 @@ package com.hollispark.store.service;
 
 import com.hollispark.store.domain.ContactRepository;
 import com.hollispark.store.domain.CustomerOrder;
+import com.hollispark.store.domain.Marketplace;
 import com.hollispark.store.domain.OrderLine;
 import com.hollispark.store.domain.OrderRepository;
 import com.hollispark.store.domain.OrderStatus;
+import com.hollispark.store.domain.OutboundClickRepository;
 import com.hollispark.store.domain.ProductRepository;
 import com.hollispark.store.domain.SubscriberRepository;
 import com.hollispark.store.dto.AdminDtos.OrderSummary;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,15 +37,20 @@ public class DashboardService {
     private final ProductRepository products;
     private final ContactRepository messages;
     private final SubscriberRepository subscribers;
+    private final OutboundClickRepository clicks;
 
     public record DayPoint(String date, int orders, BigDecimal revenue) {}
 
     public record TopProduct(String id, String name, int qty, BigDecimal revenue) {}
 
+    /** Something people followed out to a marketplace, and how often. */
+    public record OutboundTop(String name, String marketplace, long clicks) {}
+
     public record Dashboard(int ordersToday, BigDecimal revenueToday, int orders7d, BigDecimal revenue7d,
                             BigDecimal revenue30d, BigDecimal averageOrder30d, long openOrders, long newMessages,
                             long subscribers, long activeProducts, Map<String, Long> statusCounts,
-                            List<DayPoint> salesByDay, List<TopProduct> topProducts, List<OrderSummary> recentOrders) {}
+                            List<DayPoint> salesByDay, List<TopProduct> topProducts, List<OrderSummary> recentOrders,
+                            Map<String, Long> marketplaceClicks30d, List<OutboundTop> topOutbound30d) {}
 
     @Transactional(readOnly = true)
     public Dashboard summary() {
@@ -93,6 +101,12 @@ public class DashboardService {
         for (OrderStatus s : OrderStatus.values()) statusCounts.put(s.name(), 0L);
         for (Object[] row : orders.countByStatusGrouped()) statusCounts.put(((OrderStatus) row[0]).name(), (Long) row[1]);
 
+        Map<String, Long> marketplaceClicks = new LinkedHashMap<>();
+        for (Marketplace m : Marketplace.values()) marketplaceClicks.put(m.name(), 0L);
+        for (Object[] row : clicks.countByMarketplaceSince(from30)) marketplaceClicks.put(((Marketplace) row[0]).name(), (Long) row[1]);
+        List<OutboundTop> topOutbound = clicks.topSince(from30, PageRequest.of(0, 5)).stream()
+                .map(r -> new OutboundTop((String) r[0], ((Marketplace) r[1]).label(), (Long) r[2])).toList();
+
         BigDecimal average = sales.isEmpty() ? BigDecimal.ZERO
                 : revenue30d.divide(BigDecimal.valueOf(sales.size()), 2, RoundingMode.HALF_UP);
         return new Dashboard(ordersToday, revenueToday, orders7d, revenue7d, revenue30d, average,
@@ -100,6 +114,7 @@ public class DashboardService {
                 messages.countByStatus("NEW"), subscribers.count(), products.countByActiveTrue(),
                 statusCounts, salesByDay,
                 top.values().stream().sorted(Comparator.comparingInt(TopProduct::qty).reversed()).limit(5).toList(),
-                orders.findTop5ByOrderByCreatedAtDesc().stream().map(OrderSummary::of).toList());
+                orders.findTop5ByOrderByCreatedAtDesc().stream().map(OrderSummary::of).toList(),
+                marketplaceClicks, topOutbound);
     }
 }

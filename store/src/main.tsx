@@ -5,10 +5,11 @@ import "./index.css"
 import App from "./App.tsx"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
 import { StoreProvider } from "@/state/store"
+import { StoreSkeleton } from "@/components/store/skeletons"
 
 function Boot({ error, retry }: { error: string | null; retry: () => void }) {
   return (
-    <main className="flex min-h-svh items-center justify-center px-6 text-center">
+    <main className={error ? "flex min-h-svh items-center justify-center px-6 text-center" : "min-h-svh"}>
       {error ? (
         <div className="space-y-4">
           <h1 className="font-heading text-3xl font-extrabold uppercase">The store could not load</h1>
@@ -16,7 +17,7 @@ function Boot({ error, retry }: { error: string | null; retry: () => void }) {
           <button type="button" onClick={retry} className="h-11 rounded-full bg-foreground px-6 text-background">Try again</button>
         </div>
       ) : (
-        <p className="font-mono text-xs tracking-[0.2em] text-muted-foreground uppercase" aria-live="polite">Loading the store</p>
+        <StoreSkeleton />
       )}
     </main>
   )

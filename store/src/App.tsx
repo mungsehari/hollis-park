@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react"
 import { Route, Routes, useLocation } from "react-router"
 import { Layout } from "@/components/store/layout"
+import { PageSkeleton } from "@/components/store/skeletons"
 import { Home } from "@/pages/Home"
 
 /* Everything except the home page loads on demand, so the first paint stays light. */
@@ -21,13 +22,14 @@ const Contact = named(() => import("@/pages/Info"), "Contact")
 const About = named(() => import("@/pages/Info"), "About")
 const Newsletter = named(() => import("@/pages/Info"), "Newsletter")
 const Legal = named(() => import("@/pages/Info"), "Legal")
+const Care = named(() => import("@/pages/Care"), "Care")
 const NotFound = named(() => import("@/pages/NotFound"), "NotFound")
 
 export function App() {
   const location = useLocation()
   return (
     <Layout>
-      <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
+      <Suspense fallback={<PageSkeleton />}>
       <Routes location={location}>
         <Route path="/" element={<Home />} />
         <Route path="/catalog" element={<Catalog />} />
@@ -44,6 +46,7 @@ export function App() {
         <Route path="/about" element={<About />} />
         <Route path="/newsletter" element={<Newsletter />} />
         <Route path="/legal" element={<Legal />} />
+        <Route path="/care" element={<Care />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>

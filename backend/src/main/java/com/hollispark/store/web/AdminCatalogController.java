@@ -1,5 +1,6 @@
 package com.hollispark.store.web;
 
+import com.hollispark.store.domain.Marketplace;
 import com.hollispark.store.domain.Product;
 import com.hollispark.store.domain.ProductRepository;
 import com.hollispark.store.dto.AdminDtos.ActiveUpdate;
@@ -105,6 +106,12 @@ public class AdminCatalogController {
                 || (in.img() != null && !in.img().isBlank());
         if (!hasPhoto) problems.add("Add at least one photo.");
         if (in.fit() == null || in.fit().verdict() == null || in.fit().verdict().isBlank()) problems.add("Add a fit verdict.");
+        if (in.amazonUrl() != null && !in.amazonUrl().isBlank() && !Marketplace.AMAZON.accepts(in.amazonUrl())) {
+            problems.add("The Amazon link must be an https link on amazon.in or amzn.to.");
+        }
+        if (in.flipkartUrl() != null && !in.flipkartUrl().isBlank() && !Marketplace.FLIPKART.accepts(in.flipkartUrl())) {
+            problems.add("The Flipkart link must be an https link on flipkart.com.");
+        }
         if (!problems.isEmpty()) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, String.join(" ", problems.stream().distinct().toList()));
     }
 

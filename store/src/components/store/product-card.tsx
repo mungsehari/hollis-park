@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Link } from "react-router"
 import { HeartIcon, PlusIcon, StarIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
@@ -8,28 +8,41 @@ import { Badge } from "@/components/reui/badge"
 import { inStock } from "@/lib/format"
 import type { Product } from "@/lib/types"
 import { useShop } from "@/state/store"
-import { EASE } from "./motion"
+import { FLIGHT_MS, flyToBag } from "./fly-to-bag"
+import { EASE, FadeImg } from "./motion"
 
 /** Product tile: the second photo fades in on hover, the heart saves, quick add picks a size in place. */
-export function ProductCard({ p, className, priority = false }: { p: Product; className?: string; priority?: boolean }) {
+export function ProductCard({ p, className, priority = false, ref }: { p: Product; className?: string; priority?: boolean; ref?: React.Ref<HTMLElement> }) {
   const { saved, toggleSaved, collById, money, data, addToCart, setBagOpen } = useShop()
   const [picking, setPicking] = useState(false)
   const on = saved.includes(p.id)
   const second = p.gallery[1]
+  const photoRef = useRef<HTMLDivElement>(null)
+
+  const quickAdd = (s: number) => {
+    const flew = flyToBag(p.img, photoRef.current)
+    addToCart(p.id, s, "standard")
+    setPicking(false)
+    toast.success(`${p.name}, ${data.config.sizeLabel} ${s} added to your bag`)
+    window.setTimeout(() => setBagOpen(true), flew ? FLIGHT_MS + 150 : 0)
+  }
 
   return (
     <motion.article
+      ref={ref}
+      layout="position"
+      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.25 } }}
       className={cn("group relative", className)}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px 0px -8% 0px" }}
       transition={{ duration: 0.6, ease: EASE }}
     >
-      <div className="relative overflow-hidden rounded-2xl bg-muted">
+      <div ref={photoRef} className="relative overflow-hidden rounded-2xl bg-muted">
         <Link to={`/catalog/${p.id}`} className="block" aria-label={p.name}>
-          <img
+          <FadeImg
             src={p.img} alt={p.alt} width={1254} height={1254} loading={priority ? "eager" : "lazy"} decoding="async"
-            className="aspect-square w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            className="aspect-square w-full object-cover group-hover:scale-[1.04]"
           />
           {second && (
             <img src={second} alt="" aria-hidden="true" loading="lazy" decoding="async"
@@ -65,7 +78,7 @@ export function ProductCard({ p, className, priority = false }: { p: Product; cl
                     return (
                       <button key={s} type="button" disabled={!ok}
                         aria-label={ok ? `${data.config.sizeLabel} ${s}` : `${data.config.sizeLabel} ${s}, sold out`}
-                        onClick={() => { addToCart(p.id, s, "standard"); setPicking(false); setBagOpen(true); toast.success(`${p.name}, ${data.config.sizeLabel} ${s} added to your bag`) }}
+                        onClick={() => quickAdd(s)}
                         className="h-8 rounded-md border text-xs font-medium tabular-nums transition-colors hover:border-foreground hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:text-muted-foreground/60 disabled:line-through disabled:hover:bg-transparent disabled:hover:text-muted-foreground/60">
                         {s}
                       </button>

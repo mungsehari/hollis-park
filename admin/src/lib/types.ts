@@ -27,6 +27,7 @@ export interface Product {
   rank: number; added: string; img: string; gallery: string[]; context: string | null; contextCaption?: string; alt: string
   blurb: string; desc: string; specs: [string, string, string][]; materials: [string, string][]
   fit: { verdict: string; text: string }; care: string; soldOut: number[]; low: number[]; keywords: string
+  amazonUrl?: string | null; flipkartUrl?: string | null
 }
 export interface ProductAdmin { product: Product; active: boolean; updatedAt?: string }
 
@@ -46,6 +47,8 @@ export interface Dashboard {
   salesByDay: { date: string; orders: number; revenue: number }[]
   topProducts: { id: string; name: string; qty: number; revenue: number }[]
   recentOrders: OrderSummary[]
+  marketplaceClicks30d?: Record<Marketplace, number>
+  topOutbound30d?: { name: string; marketplace: string; clicks: number }[]
 }
 
 export interface StoreInfo {
@@ -53,6 +56,14 @@ export interface StoreInfo {
   collections: { id: string; name: string }[]
   sizes: number[]
   colours: Record<string, { label: string; hex: string }>
+}
+
+export type Marketplace = "AMAZON" | "FLIPKART"
+
+/** An affiliate product shown under "Care for your pair" in the store. */
+export interface CarePick {
+  id: string | null; title: string; blurb?: string | null; image?: string | null
+  marketplace: Marketplace; url: string; sortOrder: number; active: boolean
 }
 
 export interface MediaItem { id: string; url: string; originalName?: string; contentType: string; sizeBytes: number; alt?: string; createdAt: string }

@@ -13,6 +13,7 @@ import { useShop } from "@/state/store"
 import { Eyebrow, SectionTitle } from "@/components/store/brand"
 import { CountUp, EASE, Reveal, SplitWords, Stagger, StaggerItem } from "@/components/store/motion"
 import { useTitle } from "@/components/store/page"
+import { CarePicksSection } from "@/components/store/marketplace"
 import { NewsletterForm } from "@/components/store/newsletter-form"
 import { ProductCard } from "@/components/store/product-card"
 
@@ -286,6 +287,7 @@ export function Home() {
       <Spotlight />
       <Promise />
       <Reviews />
+      <CarePicksSection />
       <Faq />
       <section className="mx-auto max-w-[90rem] px-4 pb-8 sm:px-6 lg:px-10" aria-labelledby="news">
         <Reveal className="grid gap-8 rounded-[2rem] bg-accent p-8 sm:p-12 lg:grid-cols-2 lg:items-center lg:p-16">

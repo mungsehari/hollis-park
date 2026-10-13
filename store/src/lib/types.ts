@@ -30,6 +30,9 @@ export interface Product {
   soldOut: number[];
   low: number[];
   keywords: string;
+  /** The same pair on a marketplace; reached through the store's counted redirect. */
+  amazonUrl?: string | null;
+  flipkartUrl?: string | null;
 }
 
 export interface Review {
@@ -92,6 +95,18 @@ export interface StoreConfig {
   postcode: { label: string; pattern: string; hint: string; numeric: boolean };
 }
 
+export type Marketplace = 'AMAZON' | 'FLIPKART';
+
+/** Something that goes with the shoes, bought on a marketplace (affiliate link). */
+export interface CarePick {
+  id: string;
+  title: string;
+  blurb?: string | null;
+  image?: string | null;
+  marketplace: Marketplace;
+  marketplaceLabel: string;
+}
+
 export interface StoreData {
   site: { name: string; store: string; orderPrefix: string };
   payments?: { enabled: boolean; testMode: boolean };
@@ -106,6 +121,7 @@ export interface StoreData {
   colours: Record<string, { label: string; hex: string }>;
   products: Product[];
   reviews: Review[];
+  picks: CarePick[];
 }
 
 export interface CartLine {
