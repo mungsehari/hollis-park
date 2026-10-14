@@ -77,7 +77,7 @@ Manager). Keys starting `rzp_test_` show a "Demo mode, no real money" notice in 
 store; swap to `rzp_live_` keys when you go live.
 
 Optional webhook (so a payment still counts if the customer closes the tab): in
-Razorpay -> Webhooks add `https://YOUR-DOMAIN/api/payments/razorpay/webhook`, choose
+Razorpay -> Webhooks add `https://YOUR-DOMAIN/api/v1/payments/razorpay/webhook`, choose
 the `payment.captured` and `order.paid` events, set a secret, and use the same value
 as `RAZORPAY_WEBHOOK_SECRET`. Locally this needs a tunnel (for example ngrok).
 
@@ -92,7 +92,7 @@ them) until paid; they are left out of revenue until then.
 - **Care picks:** Content → *Care picks*. Socks, cleaners, insoles and the like, each with a photo,
   a marketplace and a link. They appear on the homepage ("Care for your pair") and on `/care`.
   The four seeded picks use plain marketplace search links; replace them with your affiliate links.
-- **Click tracking:** every link goes through `/api/go/...`, which counts the click (what was
+- **Click tracking:** every link goes through `/api/v1/go/...`, which counts the click (what was
   clicked and where; no personal data) and then redirects. The dashboard shows clicks per
   marketplace and the most followed items for the last 30 days.
 - **Safety:** only `https` links on the marketplace's own domains (amazon.in, amzn.to, flipkart.com,
@@ -110,14 +110,22 @@ stock-checked on the server.
 
 ## API
 
+All routes are under `/api/v1` and answer with one envelope,
+`{success, status, message, data[, requestId]}`. Paged lists return
+`data = {content, pageNumber, pageSize, totalElements, totalPages, last}`. The API description is at
+`/api/v1/docs` (Swagger UI at `/api/v1/docs/ui`, local and dev only). Backend conventions and the
+error rules are in `backend/CLAUDE.md` and `backend/docs/error-handling.md`.
+
 | Method | Path | Who |
 | --- | --- | --- |
-| GET | `/api/store`, `/api/products`, `/api/collections`, `/api/reviews`, `/media/**` | public |
-| POST | `/api/orders`, `/api/contact`, `/api/newsletter`, `/api/promo/validate` | public |
-| GET / POST | `/api/auth/csrf`, `/login`, `/logout`, `/me`, `/password` | staff |
-| GET / PATCH | `/api/admin/orders`, `/messages`, `/subscribers`, `/dashboard` | staff |
-| GET / POST / PUT / PATCH | `/api/admin/products`, `/collections`, `/home`, `/media`, `/settings` | read: staff, write: admin |
-| all | `/api/admin/promo-codes`, `/api/admin/staff` | admin |
+| GET | `/api/v1/store`, `/products`, `/products/{slug}`, `/collections`, `/reviews`, `/care-picks`, `/media/**` | public |
+| POST | `/api/v1/orders`, `/orders/{number}/payment`, `/contact`, `/newsletter`, `/promo/validate` | public |
+| GET | `/api/v1/go/product/{slug}/{amazon,flipkart}`, `/go/pick/{id}` (counted redirects) | public |
+| POST | `/api/v1/payments/razorpay/webhook` | Razorpay (signed) |
+| GET / POST | `/api/v1/auth/csrf`, `/login`, `/logout`, `/me`, `/password` | staff |
+| GET / PATCH | `/api/v1/admin/dashboard`, `/orders`, `/messages`, `/subscribers` (+ `/subscribers/export`) | staff |
+| GET + writes | `/api/v1/admin/products`, `/collections`, `/home`, `/media`, `/care-picks`, `/settings` | read: staff, write: admin |
+| all | `/api/v1/admin/promo-codes`, `/api/v1/admin/staff` | admin |
 
 ## Where things live
 

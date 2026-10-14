@@ -30,7 +30,7 @@ function Kpi({ title, value, format, hint, icon, to }: { title: string; value: n
 }
 
 export function Dashboard() {
-  const { data: d, error, loading } = useApi<D>("/api/admin/dashboard")
+  const { data: d, error, loading } = useApi<D>("/api/v1/admin/dashboard")
   if (error) return <ErrorNote error={error} />
   if (loading || !d) {
     return (

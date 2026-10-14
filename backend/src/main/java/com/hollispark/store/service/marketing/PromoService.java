@@ -1,12 +1,12 @@
 package com.hollispark.store.service.marketing;
 
 import com.hollispark.store.entity.marketing.PromoCode;
-import com.hollispark.store.exception.ApiException;
+import com.hollispark.store.exception.ConflictException;
+import com.hollispark.store.exception.ResourceNotFoundException;
 import com.hollispark.store.repository.marketing.PromoCodeRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +24,7 @@ public class PromoService {
     @Transactional
     public PromoCode create(String code, BigDecimal rate) {
         String normalised = code.trim().toUpperCase();
-        if (promos.existsByCodeIgnoreCase(normalised)) throw new ApiException(HttpStatus.CONFLICT, "This code already exists.");
+        if (promos.existsByCodeIgnoreCase(normalised)) throw new ConflictException("This code already exists.");
         return promos.save(PromoCode.builder().code(normalised).rate(rate).build());
     }
 
@@ -42,6 +42,6 @@ public class PromoService {
     }
 
     private PromoCode find(String code) {
-        return promos.findByCodeIgnoreCase(code.trim()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Code not found."));
+        return promos.findByCodeIgnoreCase(code.trim()).orElseThrow(() -> new ResourceNotFoundException("Code not found."));
     }
 }

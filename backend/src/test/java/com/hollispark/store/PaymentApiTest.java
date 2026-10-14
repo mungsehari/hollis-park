@@ -58,9 +58,9 @@ class PaymentApiTest {
         String body = """
                 {"email":"asha@example.com","first":"Asha","last":"Rao","address":"12 MG Road","city":"Pune","pin":"411001",
                  "ship":"standard","items":[{"id":"tide-one","size":9,"width":"standard","qty":1}]}""";
-        String res = mvc.perform(post("/api/orders").contentType(MediaType.APPLICATION_JSON).content(body))
+        String res = mvc.perform(post("/api/v1/orders").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-        return json.readTree(res);
+        return json.readTree(res).get("data");
     }
 
     private String confirmBody(String rzpOrder, String paymentId, String signature) {
@@ -85,12 +85,12 @@ class PaymentApiTest {
         JsonNode o = order();
         String number = o.get("orderNumber").asText();
         String rzp = o.at("/payment/razorpayOrderId").asText();
-        mvc.perform(post("/api/orders/" + number + "/payment").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/orders/" + number + "/payment").contentType(MediaType.APPLICATION_JSON)
                         .content(confirmBody(rzp, "pay_FORGED", "0".repeat(64))))
-                .andExpect(status().isUnprocessableEntity());
-        mvc.perform(post("/api/orders/" + number + "/payment").contentType(MediaType.APPLICATION_JSON)
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/v1/orders/" + number + "/payment").contentType(MediaType.APPLICATION_JSON)
                         .content(confirmBody("order_SOMEONE_ELSE", "pay_1", RazorpaySignatures.hmacHex("test_secret_123", "order_SOMEONE_ELSE|pay_1"))))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -100,10 +100,10 @@ class PaymentApiTest {
         String rzp = o.at("/payment/razorpayOrderId").asText();
         String sig = RazorpaySignatures.hmacHex("test_secret_123", rzp + "|pay_OK1");
         for (int i = 0; i < 2; i++) { // a second delivery changes nothing
-            mvc.perform(post("/api/orders/" + number + "/payment").contentType(MediaType.APPLICATION_JSON).content(confirmBody(rzp, "pay_OK1", sig)))
+            mvc.perform(post("/api/v1/orders/" + number + "/payment").contentType(MediaType.APPLICATION_JSON).content(confirmBody(rzp, "pay_OK1", sig)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status").value("RECEIVED"))
-                    .andExpect(jsonPath("$.paymentStatus").value("PAID"));
+                    .andExpect(jsonPath("$.data.status").value("RECEIVED"))
+                    .andExpect(jsonPath("$.data.paymentStatus").value("PAID"));
         }
     }
 
@@ -113,24 +113,24 @@ class PaymentApiTest {
         String number = o.get("orderNumber").asText();
         String rzp = o.at("/payment/razorpayOrderId").asText();
         String body = "{\"event\":\"payment.captured\",\"payload\":{\"payment\":{\"entity\":{\"id\":\"pay_HOOK1\",\"order_id\":\"" + rzp + "\"}}}}";
-        mvc.perform(post("/api/payments/razorpay/webhook").contentType(MediaType.APPLICATION_JSON).header("X-Razorpay-Signature", "bad").content(body))
+        mvc.perform(post("/api/v1/payments/razorpay/webhook").contentType(MediaType.APPLICATION_JSON).header("X-Razorpay-Signature", "bad").content(body))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/payments/razorpay/webhook").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/payments/razorpay/webhook").contentType(MediaType.APPLICATION_JSON)
                         .header("X-Razorpay-Signature", RazorpaySignatures.hmacHex("whsec_test_456", body)).content(body))
                 .andExpect(status().isOk());
-        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/store")).andExpect(status().isOk());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/store")).andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = "staff@hollispark.local", roles = "STAFF")
     void unpaidOrdersCannotBeConfirmedByStaff() throws Exception {
         String number = order().get("orderNumber").asText();
-        mvc.perform(patch("/api/admin/orders/" + number).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CONFIRMED\"}"))
+        mvc.perform(patch("/api/v1/admin/orders/" + number).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CONFIRMED\"}"))
                 .andExpect(status().isConflict());
-        mvc.perform(get("/api/admin/orders/" + number)).andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
-                .andExpect(jsonPath("$.paymentStatus").value("PENDING"))
-                .andExpect(jsonPath("$.nextStatuses[0]").value("CANCELLED"))
-                .andExpect(jsonPath("$.orderNumber", startsWith("HP-")));
+        mvc.perform(get("/api/v1/admin/orders/" + number)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PENDING_PAYMENT"))
+                .andExpect(jsonPath("$.data.paymentStatus").value("PENDING"))
+                .andExpect(jsonPath("$.data.nextStatuses[0]").value("CANCELLED"))
+                .andExpect(jsonPath("$.data.orderNumber", startsWith("HP-")));
     }
 }

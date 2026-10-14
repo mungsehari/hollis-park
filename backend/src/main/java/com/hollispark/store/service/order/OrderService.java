@@ -10,7 +10,7 @@ import com.hollispark.store.entity.order.OrderLine;
 import com.hollispark.store.entity.order.StatusEvent;
 import com.hollispark.store.enums.OrderStatus;
 import com.hollispark.store.enums.Width;
-import com.hollispark.store.exception.ApiException;
+import com.hollispark.store.exception.BadRequestException;
 import com.hollispark.store.repository.catalog.ProductRepository;
 import com.hollispark.store.repository.order.OrderRepository;
 import com.hollispark.store.service.catalog.StaticContent;
@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +58,7 @@ public class OrderService {
         String promo = null;
         if (req.promo() != null && !req.promo().isBlank()) {
             rate = settings.promoRate(req.promo());
-            if (rate == null) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "That discount code is not valid.");
+            if (rate == null) throw new BadRequestException("That discount code is not valid.");
             promo = req.promo().trim().toUpperCase();
         }
 
@@ -71,17 +70,16 @@ public class OrderService {
         BigDecimal subtotal = BigDecimal.ZERO;
         for (OrderRequest.Item item : req.items()) {
             Product p = bySlug.get(item.id());
-            if (p == null || !p.isActive()) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Unknown product: " + item.id());
+            if (p == null || !p.isActive()) throw new BadRequestException("Unknown product: " + item.id());
             boolean wide = item.width() == Width.WIDE;
             if (!isKnownSize(item.size())) {
-                throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Unknown size: " + trim(item.size()));
+                throw new BadRequestException("Unknown size: " + trim(item.size()));
             }
             if (wide && p.getWide() == null) {
-                throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, p.getName() + " is not available in Wide.");
+                throw new BadRequestException(p.getName() + " is not available in Wide.");
             }
             if (!p.inStock(item.size(), wide)) {
-                throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        p.getName() + " in " + props.sizeLabel() + " " + trim(item.size()) + (wide ? " Wide" : "") + " is sold out.");
+                throw new BadRequestException(p.getName() + " in " + props.sizeLabel() + " " + trim(item.size()) + (wide ? " Wide" : "") + " is sold out.");
             }
             BigDecimal unit = BigDecimal.valueOf(p.unitPrice(wide));
             BigDecimal lineTotal = unit.multiply(BigDecimal.valueOf(item.qty()));

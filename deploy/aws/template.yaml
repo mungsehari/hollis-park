@@ -17,7 +17,7 @@ Parameters:
   AdminCidr:
     Type: String
     Description: >
-      Public IP range allowed to open /admin, /api/admin and /api/auth, for example 203.0.113.7/32. The site is plain
+      Public IP range allowed to open /admin, /api/v1/admin and /api/v1/auth, for example 203.0.113.7/32. The site is plain
       HTTP for now, so keeping staff pages to your own address protects the admin login. 0.0.0.0/0 opens them to all.
     AllowedPattern: '[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}'
   TaskCpu:
@@ -216,7 +216,7 @@ Resources:
       Priority: 5
       Conditions:
         - Field: path-pattern
-          PathPatternConfig: {Values: [/admin, /admin/*, /api/admin/*, /api/auth/*]}
+          PathPatternConfig: {Values: [/admin, /admin/*, /api/*admin/*, /api/*auth/*]}
         - Field: source-ip
           SourceIpConfig: {Values: [!Ref AdminCidr]}
       Actions: [{Type: forward, TargetGroupArn: !Ref WebTargets}]
@@ -227,7 +227,7 @@ Resources:
       Priority: 6
       Conditions:
         - Field: path-pattern
-          PathPatternConfig: {Values: [/admin, /admin/*, /api/admin/*, /api/auth/*]}
+          PathPatternConfig: {Values: [/admin, /admin/*, /api/*admin/*, /api/*auth/*]}
       Actions:
         - Type: fixed-response
           FixedResponseConfig: {StatusCode: '403', ContentType: text/plain, MessageBody: 'Staff pages are limited to the office network.'}

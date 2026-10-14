@@ -2,8 +2,12 @@ package com.hollispark.store.service.content;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hollispark.store.config.StoreProperties;
+import com.hollispark.store.dto.base.PaginationDto;
+import com.hollispark.store.dto.content.MediaDto;
 import com.hollispark.store.entity.content.Media;
-import com.hollispark.store.exception.ApiException;
+import com.hollispark.store.exception.BadRequestException;
+import com.hollispark.store.exception.ConflictException;
+import com.hollispark.store.exception.ResourceNotFoundException;
 import com.hollispark.store.repository.catalog.CollectionRepository;
 import com.hollispark.store.repository.catalog.ProductRepository;
 import com.hollispark.store.repository.content.CarePickRepository;
@@ -11,11 +15,11 @@ import com.hollispark.store.repository.content.MediaRepository;
 import com.hollispark.store.repository.content.SiteContentRepository;
 import com.hollispark.store.storage.ImageTypes;
 import com.hollispark.store.storage.MediaStorage;
+import com.hollispark.store.util.PageRequests;
 import java.io.IOException;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,22 +51,27 @@ public class MediaService {
         this.baseUrl = base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
     }
 
+    @Transactional(readOnly = true)
+    public PaginationDto<MediaDto> list(int page, int size) {
+        return PaginationDto.of(media.findAll(PageRequests.newestFirst(page, size, 200)), MediaDto::of);
+    }
+
     public String urlFor(String key) {
         return baseUrl + "/" + key;
     }
 
     @Transactional
     public Media upload(MultipartFile file, String alt, String who) {
-        if (file == null || file.isEmpty()) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Choose an image to upload.");
-        if (file.getSize() > MAX_BYTES) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Images can be up to 8 MB.");
+        if (file == null || file.isEmpty()) throw new BadRequestException("Choose an image to upload.");
+        if (file.getSize() > MAX_BYTES) throw new BadRequestException("Images can be up to 8 MB.");
         byte[] bytes;
         try {
             bytes = file.getBytes();
         } catch (IOException e) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "The upload could not be read.");
+            throw new BadRequestException("The upload could not be read.");
         }
         ImageTypes.Type type = ImageTypes.detect(bytes);
-        if (type == null) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Use a JPG, PNG, WebP or AVIF image.");
+        if (type == null) throw new BadRequestException("Use a JPG, PNG, WebP or AVIF image.");
         YearMonth ym = YearMonth.now(ZoneOffset.UTC);
         String key = String.format("uploads/%d/%02d/%s.%s", ym.getYear(), ym.getMonthValue(), UUID.randomUUID(), type.extension());
         storage.put(key, bytes, type.contentType());
@@ -101,9 +110,9 @@ public class MediaService {
 
     @Transactional
     public void delete(UUID id) {
-        Media m = media.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Image not found."));
+        Media m = media.findById(id).orElseThrow(() -> new ResourceNotFoundException("Image not found."));
         if (inUse(m.getUrl())) {
-            throw new ApiException(HttpStatus.CONFLICT, "This image is used by a product, collection or the homepage. Replace it there first.");
+            throw new ConflictException("This image is used by a product, collection or the homepage. Replace it there first.");
         }
         storage.delete(m.getStorageKey());
         media.delete(m);

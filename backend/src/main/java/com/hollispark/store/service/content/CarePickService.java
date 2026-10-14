@@ -2,12 +2,12 @@ package com.hollispark.store.service.content;
 
 import com.hollispark.store.dto.content.CarePickDto;
 import com.hollispark.store.entity.content.CarePick;
-import com.hollispark.store.exception.ApiException;
+import com.hollispark.store.exception.BadRequestException;
+import com.hollispark.store.exception.ResourceNotFoundException;
 import com.hollispark.store.repository.content.CarePickRepository;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,12 +45,11 @@ public class CarePickService {
 
     private static void checkLink(CarePickDto in) {
         if (!in.marketplace().accepts(in.url())) {
-            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Use an https link on " + in.marketplace().label() + " (for example the product page or your affiliate short link).");
+            throw new BadRequestException("Use an https link on " + in.marketplace().label() + " (for example the product page or your affiliate short link).");
         }
     }
 
     private CarePick find(UUID id) {
-        return picks.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Pick not found."));
+        return picks.findById(id).orElseThrow(() -> new ResourceNotFoundException("Pick not found."));
     }
 }

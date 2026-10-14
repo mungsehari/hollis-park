@@ -19,3 +19,10 @@ logging:
   structured:
     format:
       console: ecs
+
+# The API description is for development; production does not publish it.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

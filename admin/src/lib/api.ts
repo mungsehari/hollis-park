@@ -1,4 +1,8 @@
-/** Same-origin API client. Admin requests carry the session cookie and the CSRF token Spring issues. */
+/**
+ * Same-origin API client. Admin requests carry the session cookie and the CSRF token Spring issues.
+ * Every JSON answer is the envelope {success, status, message, data[, requestId]}; callers get `data`,
+ * failures become an ApiError with the server's message (and per-field messages for validation).
+ */
 export class ApiError extends Error {
   readonly status: number
   readonly fields: Record<string, string>
@@ -15,7 +19,7 @@ const readCookie = (name: string) =>
 let csrfLoaded: Promise<void> | null = null
 function ensureCsrf() {
   if (readCookie("XSRF-TOKEN")) return Promise.resolve()
-  csrfLoaded ??= fetch("/api/auth/csrf", { credentials: "same-origin" }).then(() => undefined).finally(() => { csrfLoaded = null })
+  csrfLoaded ??= fetch("/api/v1/auth/csrf", { credentials: "same-origin" }).then(() => undefined).finally(() => { csrfLoaded = null })
   return csrfLoaded
 }
 
@@ -41,14 +45,15 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     throw new ApiError("Cannot reach the server. Check your connection.", 0)
   }
   if (res.status === 204) return undefined as T
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    if (res.status === 401 && !path.startsWith("/api/auth/login")) onUnauthorized()
-    const fields = data.fields ?? {}
+  const env = await res.json().catch(() => ({}))
+  if (!res.ok || env.success === false) {
+    if (res.status === 401 && !path.startsWith("/api/v1/auth/login")) onUnauthorized()
+    const fields: Record<string, string> = res.status === 400 && env.data && typeof env.data === "object" ? env.data : {}
     const detail = Object.values(fields).join(" ")
-    throw new ApiError(detail ? `${data.message} ${detail}` : data.message || "Something went wrong.", res.status, fields)
+    const message = env.message || "Something went wrong."
+    throw new ApiError(detail ? `${message} ${detail}` : message, res.status, fields)
   }
-  return data as T
+  return env.data as T
 }
 
 /** Uploads one image as multipart form data (the browser sets the boundary header). */
@@ -68,12 +73,12 @@ async function upload<T>(path: string, file: File, fields: Record<string, string
   } catch {
     throw new ApiError("Cannot reach the server. Check your connection.", 0)
   }
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
+  const env = await res.json().catch(() => ({}))
+  if (!res.ok || env.success === false) {
     if (res.status === 401) onUnauthorized()
-    throw new ApiError(data.message || "The upload failed.", res.status)
+    throw new ApiError(env.message || "The upload failed.", res.status)
   }
-  return data as T
+  return env.data as T
 }
 
 export const api = {

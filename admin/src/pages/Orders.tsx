@@ -27,7 +27,7 @@ export function Orders() {
     return () => clearTimeout(t)
   }, [q, setParams])
 
-  const path = `/api/admin/orders${qs({ status, q: params.get("q"), page: pagination.pageIndex, size: pagination.pageSize })}`
+  const path = `/api/v1/admin/orders${qs({ status, q: params.get("q"), page: pagination.pageIndex, size: pagination.pageSize })}`
   const { data, error, loading } = useApi<Page<OrderSummary>>(path)
 
   const columns = useMemo<GridColumn<OrderSummary>[]>(() => [
@@ -69,13 +69,13 @@ export function Orders() {
       </div>
       <ErrorNote error={error} />
       <AdminGrid
-        data={data?.items ?? []}
+        data={data?.content ?? []}
         columns={columns}
         getRowId={(o) => o.orderNumber}
         isLoading={loading && !data}
         onRowClick={(o) => navigate(`/orders/${o.orderNumber}`)}
         emptyMessage={<Empty icon={<ShoppingBagIcon />} title="No orders here">{q || status ? "Try another search or status." : "Orders placed in the store appear here."}</Empty>}
-        server={{ total: data?.total ?? 0, pagination, onPaginationChange: setPagination }}
+        server={{ total: data?.totalElements ?? 0, pagination, onPaginationChange: setPagination }}
       />
     </>
   )

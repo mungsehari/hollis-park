@@ -34,17 +34,17 @@ const blank = (sortOrder: number): CarePick => ({ id: null, title: "", blurb: ""
 export function CarePicks() {
   const { can } = useAuth()
   const admin = can("ADMIN")
-  const { data, error, loading, reload } = useApi<CarePick[]>("/api/admin/care-picks")
+  const { data, error, loading, reload } = useApi<CarePick[]>("/api/v1/admin/care-picks")
   const [editing, setEditing] = useState<CarePick | null>(null)
   const [removing, setRemoving] = useState<CarePick | null>(null)
 
   const toggle = async (p: CarePick, active: boolean) => {
-    try { await api.put(`/api/admin/care-picks/${p.id}`, { ...p, active }); toast.success(active ? "Pick is live" : "Pick hidden from the store"); reload() }
+    try { await api.put(`/api/v1/admin/care-picks/${p.id}`, { ...p, active }); toast.success(active ? "Pick is live" : "Pick hidden from the store"); reload() }
     catch (err) { toast.error(err instanceof ApiError ? err.message : "Could not update.") }
   }
   const remove = async () => {
     if (!removing) return
-    try { await api.del(`/api/admin/care-picks/${removing.id}`); toast.success("Pick removed"); setRemoving(null); reload() }
+    try { await api.del(`/api/v1/admin/care-picks/${removing.id}`); toast.success("Pick removed"); setRemoving(null); reload() }
     catch (err) { toast.error(err instanceof ApiError ? err.message : "Could not remove.") }
   }
 
@@ -130,8 +130,8 @@ function PickDialog({ pick, readOnly, onClose, onSaved }: { pick: CarePick | nul
     setBusy(true)
     setError(null)
     try {
-      if (isNew) await api.post("/api/admin/care-picks", draft)
-      else await api.put(`/api/admin/care-picks/${draft.id}`, draft)
+      if (isNew) await api.post("/api/v1/admin/care-picks", draft)
+      else await api.put(`/api/v1/admin/care-picks/${draft.id}`, draft)
       toast.success(isNew ? "Pick added" : "Pick saved")
       onSaved()
     } catch (err) { setError(err instanceof ApiError ? err.message : "Could not save.") } finally { setBusy(false) }

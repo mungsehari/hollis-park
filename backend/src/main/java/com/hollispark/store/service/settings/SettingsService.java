@@ -2,13 +2,12 @@ package com.hollispark.store.service.settings;
 
 import com.hollispark.store.entity.marketing.PromoCode;
 import com.hollispark.store.entity.settings.StoreSettings;
-import com.hollispark.store.exception.ApiException;
+import com.hollispark.store.exception.ServiceUnavailableException;
 import com.hollispark.store.repository.marketing.PromoCodeRepository;
 import com.hollispark.store.repository.settings.StoreSettingsRepository;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +35,7 @@ public class SettingsService {
     public Settings get() {
         if (cached == null || Instant.now().isAfter(loadedAt.plus(TTL))) {
             StoreSettings s = repo.findFirstByOrderByCreatedAtAsc()
-                    .orElseThrow(() -> new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Store settings are missing."));
+                    .orElseThrow(() -> new ServiceUnavailableException("Store settings are missing."));
             cached = of(s);
             loadedAt = Instant.now();
         }

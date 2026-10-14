@@ -92,7 +92,7 @@ function PasswordDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
     setBusy(true)
     setError(null)
     try {
-      await api.post("/api/auth/password", { current: f.get("current"), next: f.get("next") })
+      await api.post("/api/v1/auth/password", { current: f.get("current"), next: f.get("next") })
       toast.success("Password changed")
       onOpenChange(false)
     } catch (err) {

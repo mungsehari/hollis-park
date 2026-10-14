@@ -6,12 +6,14 @@ import com.hollispark.store.client.razorpay.RazorpaySignatures;
 import com.hollispark.store.config.StoreProperties;
 import com.hollispark.store.entity.order.CustomerOrder;
 import com.hollispark.store.enums.OrderStatus;
-import com.hollispark.store.exception.ApiException;
+import com.hollispark.store.exception.BadRequestException;
+import com.hollispark.store.exception.ConflictException;
+import com.hollispark.store.exception.ResourceNotFoundException;
+import com.hollispark.store.exception.UnauthorizedException;
 import com.hollispark.store.repository.order.OrderRepository;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,15 +38,15 @@ public class PaymentService {
     /** The browser reports a finished payment; the signature proves Razorpay (not the browser) produced it. */
     @Transactional
     public CustomerOrder verifyFromCheckout(String orderNumber, String razorpayOrderId, String paymentId, String signature) {
-        if (!enabled()) throw new ApiException(HttpStatus.CONFLICT, "Online payment is not turned on.");
+        if (!enabled()) throw new ConflictException("Online payment is not turned on.");
         CustomerOrder o = orders.lockByOrderNumber(orderNumber)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Order not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found."));
         if (o.getRazorpayOrderId() == null || !o.getRazorpayOrderId().equals(razorpayOrderId)) {
-            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "This payment does not belong to the order.");
+            throw new BadRequestException("This payment does not belong to the order.");
         }
         if (!RazorpaySignatures.validPayment(cfg.keySecret(), razorpayOrderId, paymentId, signature)) {
             log.warn("Bad Razorpay signature for order {}", orderNumber);
-            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "The payment could not be verified. If money was taken it will be refunded.");
+            throw new BadRequestException("The payment could not be verified. If money was taken it will be refunded.");
         }
         markPaid(o, paymentId, "customer");
         return o;
@@ -54,7 +56,7 @@ public class PaymentService {
     @Transactional
     public void handleWebhook(String rawBody, String signature) {
         if (!RazorpaySignatures.validWebhook(cfg.webhookSecret(), rawBody, signature)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Bad signature.");
+            throw new UnauthorizedException("Bad signature.");
         }
         try {
             JsonNode root = mapper.readTree(rawBody);
@@ -68,7 +70,7 @@ public class PaymentService {
                     o -> markPaid(o, paymentId, "razorpay"),
                     () -> log.warn("Webhook for unknown Razorpay order {}", rzpOrderId));
         } catch (java.io.IOException e) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Unreadable webhook.");
+            throw new BadRequestException("Unreadable webhook.");
         }
     }
 

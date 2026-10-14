@@ -3,6 +3,7 @@ package com.hollispark.store.filter;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.hollispark.store.config.StoreProperties;
+import com.hollispark.store.util.ApiErrorWriter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,18 +34,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private final boolean enabled;
+    private final ApiErrorWriter errors;
     private final List<Rule> rules;
 
-    public RateLimitFilter(StoreProperties props) {
+    public RateLimitFilter(StoreProperties props, ApiErrorWriter errors) {
+        this.errors = errors;
         this.enabled = props.rateLimit() == null || props.rateLimit().enabled();
         int scale = props.rateLimit() == null || props.rateLimit().perTenMinutes() <= 0 ? 30 : props.rateLimit().perTenMinutes();
         Duration ten = Duration.ofMinutes(10);
         this.rules = List.of(
-                Rule.of("/api/orders", scale, ten),
-                Rule.of("/api/promo/validate", scale, ten),
-                Rule.of("/api/contact", Math.max(3, scale / 3), ten),
-                Rule.of("/api/newsletter", Math.max(3, scale / 3), ten),
-                Rule.of("/api/auth/login", Math.max(5, scale / 2), Duration.ofMinutes(15)));
+                Rule.of("/api/v1/orders", scale, ten),
+                Rule.of("/api/v1/promo/validate", scale, ten),
+                Rule.of("/api/v1/contact", Math.max(3, scale / 3), ten),
+                Rule.of("/api/v1/newsletter", Math.max(3, scale / 3), ten),
+                Rule.of("/api/v1/auth/login", Math.max(5, scale / 2), Duration.ofMinutes(15)));
     }
 
     @Override
@@ -60,10 +63,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             if (!path.equals(rule.path())) continue;
             int n = rule.hits().get(req.getRemoteAddr(), k -> new AtomicInteger()).incrementAndGet();
             if (n > rule.limit()) {
-                res.setStatus(429);
                 res.setHeader("Retry-After", String.valueOf(rule.window().toSeconds()));
-                res.setContentType("application/json");
-                res.getWriter().write("{\"error\":\"Too Many Requests\",\"message\":\"Too many requests. Please wait a few minutes and try again.\"}");
+                errors.write(res, 429, "Too many requests. Please wait a few minutes and try again.");
                 return;
             }
             break;

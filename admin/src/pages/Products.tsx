@@ -13,8 +13,8 @@ import type { ProductAdmin, StoreInfo } from "@/lib/types"
 import { useApi } from "@/lib/use-api"
 
 export function Products() {
-  const { data, error, loading } = useApi<ProductAdmin[]>("/api/admin/products")
-  const { data: store } = useApi<StoreInfo>("/api/store")
+  const { data, error, loading } = useApi<ProductAdmin[]>("/api/v1/admin/products")
+  const { data: store } = useApi<StoreInfo>("/api/v1/store")
   const { can } = useAuth()
   const navigate = useNavigate()
   const [view, setView] = useState<"live" | "archived" | "all">("live")

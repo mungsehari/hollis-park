@@ -139,7 +139,7 @@ GitHub source; the build and deploy steps stay as they are.
   `https://` address. After that `AdminCidr` can be opened up if you want staff to sign in from anywhere.
 - **CloudFront:** once AWS has verified the account, a CDN in front of the load balancer is an optional extra.
 - **Razorpay:** finish KYC, put the live key id and secret in the Razorpay secret, and add the webhook
-  `https://YOUR-DOMAIN/api/payments/razorpay/webhook` (events `payment.captured`, `order.paid`) with the same
+  `https://YOUR-DOMAIN/api/v1/payments/razorpay/webhook` (events `payment.captured`, `order.paid`) with the same
   secret as `webhook_secret`. Place one real small order and refund it from the dashboard before announcing.
 - Turn on AWS WAF rate limiting for `/api/*`, and create staff accounts from the admin panel.
 - Set a monthly budget alert in AWS Budgets.

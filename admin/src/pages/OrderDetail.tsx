@@ -22,7 +22,7 @@ import { useApi } from "@/lib/use-api"
 
 export function OrderDetail() {
   const { number = "" } = useParams()
-  const { data: o, error, loading, setData } = useApi<O>(`/api/admin/orders/${encodeURIComponent(number)}`)
+  const { data: o, error, loading, setData } = useApi<O>(`/api/v1/admin/orders/${encodeURIComponent(number)}`)
   const [pending, setPending] = useState<OrderStatus | null>(null)
   const [note, setNote] = useState("")
   const [adminNote, setAdminNote] = useState<string | null>(null)
@@ -34,7 +34,7 @@ export function OrderDetail() {
   const save = async (body: Record<string, unknown>, message: string) => {
     setBusy(true)
     try {
-      setData(await api.patch<O>(`/api/admin/orders/${o.orderNumber}`, body))
+      setData(await api.patch<O>(`/api/v1/admin/orders/${o.orderNumber}`, body))
       toast.success(message)
       return true
     } catch (err) {

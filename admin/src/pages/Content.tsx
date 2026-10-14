@@ -30,7 +30,7 @@ const kb = (n: number) => (n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${M
 export function Media() {
   const { can } = useAuth()
   const admin = can("ADMIN")
-  const { data, error, loading, reload } = useApi<Page<MediaItem>>("/api/admin/media?size=120")
+  const { data, error, loading, reload } = useApi<Page<MediaItem>>("/api/v1/admin/media?size=120")
   const [deleting, setDeleting] = useState<MediaItem | null>(null)
 
   return (
@@ -40,9 +40,9 @@ export function Media() {
       {admin && <DropZone onUploaded={reload} />}
       {loading && !data ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">{Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="aspect-square rounded-2xl" />)}</div>
-      ) : data && data.items.length ? (
+      ) : data && data.content.length ? (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {data.items.map((m) => (
+          {data.content.map((m) => (
             <li key={m.id} className="group overflow-hidden rounded-2xl border bg-card">
               <div className="relative aspect-square bg-muted"><img src={m.url} alt={m.alt ?? ""} loading="lazy" className="size-full object-cover" /></div>
               <div className="flex items-center justify-between gap-2 p-3">
@@ -64,7 +64,7 @@ export function Media() {
             <AlertDialogCancel>Keep it</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={async () => {
               if (!deleting) return
-              try { await api.del(`/api/admin/media/${deleting.id}`); toast.success("Image deleted"); setDeleting(null); reload() }
+              try { await api.del(`/api/v1/admin/media/${deleting.id}`); toast.success("Image deleted"); setDeleting(null); reload() }
               catch (err) { toast.error(err instanceof ApiError ? err.message : "Could not delete."); setDeleting(null) }
             }}>Delete image</AlertDialogAction>
           </AlertDialogFooter>
@@ -81,8 +81,8 @@ const blank = (): CollectionItem => ({ id: "", name: "", tagline: "", intro: "",
 export function Collections() {
   const { can } = useAuth()
   const admin = can("ADMIN")
-  const { data, error, loading, reload } = useApi<CollectionItem[]>("/api/admin/collections")
-  const { data: products } = useApi<ProductAdmin[]>("/api/admin/products")
+  const { data, error, loading, reload } = useApi<CollectionItem[]>("/api/v1/admin/collections")
+  const { data: products } = useApi<ProductAdmin[]>("/api/v1/admin/products")
   const [editing, setEditing] = useState<{ item: CollectionItem; isNew: boolean } | null>(null)
   const counts = useMemo(() => {
     const m: Record<string, number> = {}
@@ -91,7 +91,7 @@ export function Collections() {
   }, [products])
 
   const toggle = async (c: CollectionItem, active: boolean) => {
-    try { await api.patch(`/api/admin/collections/${c.id}`, { active }); toast.success(active ? "Collection is live" : "Collection hidden from the store"); reload() }
+    try { await api.patch(`/api/v1/admin/collections/${c.id}`, { active }); toast.success(active ? "Collection is live" : "Collection hidden from the store"); reload() }
     catch (err) { toast.error(err instanceof ApiError ? err.message : "Could not update.") }
   }
 
@@ -141,8 +141,8 @@ function CollectionDialog({ state, readOnly, onClose, onSaved }: { state: { item
     setBusy(true)
     setError(null)
     try {
-      if (state.isNew) await api.post("/api/admin/collections", draft)
-      else await api.put(`/api/admin/collections/${draft.id}`, draft)
+      if (state.isNew) await api.post("/api/v1/admin/collections", draft)
+      else await api.put(`/api/v1/admin/collections/${draft.id}`, draft)
       toast.success(state.isNew ? "Collection created" : "Collection saved")
       onSaved()
     } catch (err) { setError(err instanceof ApiError ? err.message : "Could not save.") } finally { setBusy(false) }
@@ -218,8 +218,8 @@ function CollectionDialog({ state, readOnly, onClose, onSaved }: { state: { item
 export function Homepage() {
   const { can } = useAuth()
   const readOnly = !can("ADMIN")
-  const { data, error: loadError, setData } = useApi<HomeContent>("/api/admin/home")
-  const { data: products } = useApi<ProductAdmin[]>("/api/admin/products")
+  const { data, error: loadError, setData } = useApi<HomeContent>("/api/v1/admin/home")
+  const { data: products } = useApi<ProductAdmin[]>("/api/v1/admin/products")
   const [h, setH] = useState<HomeContent | null>(null)
   const [synced, setSynced] = useState<HomeContent | null>(null)
   const [busy, setBusy] = useState(false)
@@ -235,7 +235,7 @@ export function Homepage() {
     e.preventDefault()
     setBusy(true)
     setError(null)
-    try { setData(await api.put<HomeContent>("/api/admin/home", h)); toast.success("Homepage saved. It is live now.") }
+    try { setData(await api.put<HomeContent>("/api/v1/admin/home", h)); toast.success("Homepage saved. It is live now.") }
     catch (err) { setError(err instanceof ApiError ? err.message : "Could not save.") } finally { setBusy(false) }
   }
 

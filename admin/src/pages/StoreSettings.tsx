@@ -39,7 +39,7 @@ function Amount({ id, label, hint, value, onChange, step = 1, currency = true }:
 export function Settings() {
   const { can } = useAuth()
   const readOnly = !can("ADMIN")
-  const { data, error: loadError, setData } = useApi<S>("/api/admin/settings")
+  const { data, error: loadError, setData } = useApi<S>("/api/v1/admin/settings")
   const [s, setS] = useState<S | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -57,7 +57,7 @@ export function Settings() {
     setBusy(true)
     setError(null)
     try {
-      setData(await api.put<S>("/api/admin/settings", s))
+      setData(await api.put<S>("/api/v1/admin/settings", s))
       toast.success("Saved. The store uses the new values within 30 seconds.")
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not save.")
@@ -110,12 +110,12 @@ export function Settings() {
 }
 
 export function PromoCodes() {
-  const { data, error, loading, reload } = useApi<Promo[]>("/api/admin/promo-codes")
+  const { data, error, loading, reload } = useApi<Promo[]>("/api/v1/admin/promo-codes")
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState<Promo | null>(null)
 
   const patch = async (p: Promo, body: Partial<Promo>, message: string) => {
-    try { await api.patch(`/api/admin/promo-codes/${p.code}`, body); toast.success(message); reload() }
+    try { await api.patch(`/api/v1/admin/promo-codes/${p.code}`, body); toast.success(message); reload() }
     catch (err) { toast.error(err instanceof ApiError ? err.message : "Could not update.") }
   }
 
@@ -147,7 +147,7 @@ export function PromoCodes() {
             <AlertDialogCancel>Keep it</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={async () => {
               if (!deleting) return
-              try { await api.del(`/api/admin/promo-codes/${deleting.code}`); toast.success("Code deleted"); setDeleting(null); reload() }
+              try { await api.del(`/api/v1/admin/promo-codes/${deleting.code}`); toast.success("Code deleted"); setDeleting(null); reload() }
               catch (err) { toast.error(err instanceof ApiError ? err.message : "Could not delete.") }
             }}>Delete code</AlertDialogAction>
           </AlertDialogFooter>
@@ -164,7 +164,7 @@ function PromoDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenChan
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     try {
-      await api.post("/api/admin/promo-codes", { code, rate: percent / 100 })
+      await api.post("/api/v1/admin/promo-codes", { code, rate: percent / 100 })
       toast.success(`${code.toUpperCase()} created`)
       setCode("")
       onOpenChange(false)

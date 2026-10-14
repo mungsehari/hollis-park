@@ -2,6 +2,7 @@ package com.hollispark.store.controller.marketing;
 
 import com.hollispark.store.enums.Marketplace;
 import com.hollispark.store.service.marketing.OutboundService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
  * Only stored, validated links are ever used, so this cannot be abused as an open redirect.
  * When a link no longer exists the visitor lands back on the store instead of an error page.
  */
+@Tag(name = "Outbound", description = "Counted redirects to Amazon / Flipkart")
 @RestController
-@RequestMapping("/api/go")
+@RequestMapping("/api/v1/go")
 @RequiredArgsConstructor
 public class OutboundController {
     private final OutboundService outbound;

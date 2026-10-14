@@ -1,6 +1,6 @@
 import type { ShipMethod, StoreData, Width } from "./types"
 
-/** Same-origin by default (Vite proxy locally, CloudFront /api/* in production). */
+/** Same-origin by default (Vite proxy locally, nginx in production). */
 const BASE =
   (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ??
   ""
@@ -35,23 +35,24 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       0
     )
   }
-  const body = await res.json().catch(() => ({}))
-  if (!res.ok)
+  // Every answer is the envelope {success, status, message, data[, requestId]}.
+  const env = await res.json().catch(() => ({}))
+  if (!res.ok || env.success === false)
     throw new ApiError(
-      body.message || "Something went wrong. Please try again.",
+      env.message || "Something went wrong. Please try again.",
       res.status,
-      body.fields || {}
+      res.status === 400 && env.data && typeof env.data === "object" ? env.data : {}
     )
-  return body as T
+  return env.data as T
 }
 
 const post = <T>(path: string, data: unknown) =>
   request<T>(path, { method: "POST", body: JSON.stringify(data) })
 
 export const api = {
-  store: () => request<StoreData>("/api/store"),
+  store: () => request<StoreData>("/api/v1/store"),
   validatePromo: (code: string) =>
-    post<{ code: string; rate: number }>("/api/promo/validate", { code }),
+    post<{ code: string; rate: number }>("/api/v1/promo/validate", { code }),
   placeOrder: (order: {
     email: string
     first: string
@@ -79,7 +80,7 @@ export const api = {
         currency: string
         testMode: boolean
       }
-    }>("/api/orders", order),
+    }>("/api/v1/orders", order),
   confirmPayment: (
     orderNumber: string,
     p: {
@@ -89,7 +90,7 @@ export const api = {
     }
   ) =>
     post<{ orderNumber: string; status: string; paymentStatus: string }>(
-      `/api/orders/${encodeURIComponent(orderNumber)}/payment`,
+      `/api/v1/orders/${encodeURIComponent(orderNumber)}/payment`,
       p
     ),
   contact: (msg: {
@@ -99,13 +100,13 @@ export const api = {
     order?: string
     slot?: string
     message: string
-  }) => post<{ status: string }>("/api/contact", msg),
+  }) => post<{ status: string }>("/api/v1/contact", msg),
   newsletter: (email: string, topics: string[]) =>
     post<{
       status: string
       promoCode: string | null
       promoRate: number | null
-    }>("/api/newsletter", { email, topics }),
+    }>("/api/v1/newsletter", { email, topics }),
 }
 
 /** Links out to a marketplace. They pass through the store so each click is counted, then redirect. */

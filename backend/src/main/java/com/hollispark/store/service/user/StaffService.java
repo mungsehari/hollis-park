@@ -1,14 +1,17 @@
 package com.hollispark.store.service.user;
 
+import com.hollispark.store.dto.auth.Me;
 import com.hollispark.store.entity.user.StaffUser;
 import com.hollispark.store.enums.StaffRole;
-import com.hollispark.store.exception.ApiException;
+import com.hollispark.store.exception.BadRequestException;
+import com.hollispark.store.exception.ConflictException;
+import com.hollispark.store.exception.ResourceNotFoundException;
+import com.hollispark.store.exception.UnauthorizedException;
 import com.hollispark.store.repository.user.StaffUserRepository;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +32,7 @@ public class StaffService {
     public StaffUser create(String email, String name, StaffRole role, String password) {
         String normalised = email.trim().toLowerCase();
         if (staff.findByEmailIgnoreCase(normalised).isPresent()) {
-            throw new ApiException(HttpStatus.CONFLICT, "Someone already uses this email.");
+            throw new ConflictException("Someone already uses this email.");
         }
         return staff.save(StaffUser.builder()
                 .email(normalised)
@@ -46,9 +49,9 @@ public class StaffService {
         boolean self = u.getEmail().equalsIgnoreCase(actingEmail);
         boolean losesAdmin = u.getRole() == StaffRole.ADMIN && u.isActive()
                 && ((role != null && role != StaffRole.ADMIN) || Boolean.FALSE.equals(active));
-        if (self && losesAdmin) throw new ApiException(HttpStatus.CONFLICT, "You cannot remove your own admin access.");
+        if (self && losesAdmin) throw new ConflictException("You cannot remove your own admin access.");
         if (losesAdmin && staff.countByRoleAndActiveTrue(StaffRole.ADMIN) <= 1) {
-            throw new ApiException(HttpStatus.CONFLICT, "The store needs at least one active admin.");
+            throw new ConflictException("The store needs at least one active admin.");
         }
         if (name != null && !name.isBlank()) u.setName(name.trim());
         if (role != null) u.setRole(role);
@@ -63,7 +66,28 @@ public class StaffService {
         return u;
     }
 
+    /** Stamps the sign-in time and returns who signed in. */
+    @Transactional
+    public Me signedIn(String email) {
+        StaffUser u = staff.findByEmailIgnoreCase(email).orElseThrow(() -> new UnauthorizedException("Please sign in."));
+        u.setLastLoginAt(java.time.Instant.now());
+        return Me.of(u);
+    }
+
+    @Transactional(readOnly = true)
+    public Me me(String email) {
+        return staff.findByEmailIgnoreCase(email).filter(StaffUser::isActive).map(Me::of)
+                .orElseThrow(() -> new UnauthorizedException("Please sign in."));
+    }
+
+    @Transactional
+    public void changePassword(String email, String current, String next) {
+        StaffUser u = staff.findByEmailIgnoreCase(email).orElseThrow(() -> new UnauthorizedException("Please sign in."));
+        if (!encoder.matches(current, u.getPasswordHash())) throw new BadRequestException("Your current password is incorrect.");
+        u.setPasswordHash(encoder.encode(next));
+    }
+
     private StaffUser find(UUID id) {
-        return staff.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Staff member not found."));
+        return staff.findById(id).orElseThrow(() -> new ResourceNotFoundException("Staff member not found."));
     }
 }

@@ -20,7 +20,8 @@ import org.springframework.web.filter.ShallowEtagHeaderFilter;
  */
 @Configuration
 public class ApiCacheFilter {
-    private static final String[] CATALOG_READS = {"/api/store", "/api/products", "/api/products/*", "/api/collections", "/api/reviews"};
+    private static final String[] CATALOG_READS = {"/api/v1/store", "/api/v1/products", "/api/v1/products/*", "/api/v1/collections",
+        "/api/v1/reviews", "/api/v1/care-picks"};
 
     static class CacheControlFilter extends OncePerRequestFilter {
         @Override
@@ -33,8 +34,8 @@ public class ApiCacheFilter {
                 throws ServletException, IOException {
             String uri = req.getRequestURI();
             boolean readOnly = "GET".equals(req.getMethod()) || "HEAD".equals(req.getMethod());
-            boolean catalogRead = readOnly && !uri.startsWith("/api/admin") && !uri.startsWith("/api/auth")
-                    && !uri.startsWith("/api/go/");
+            boolean catalogRead = readOnly && !uri.startsWith("/api/v1/admin") && !uri.startsWith("/api/v1/auth")
+                    && !uri.startsWith("/api/v1/go/");
             res.setHeader(HttpHeaders.CACHE_CONTROL, catalogRead ? "public, no-cache" : "no-store");
             chain.doFilter(req, res);
         }

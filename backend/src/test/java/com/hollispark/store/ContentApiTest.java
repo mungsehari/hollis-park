@@ -39,73 +39,73 @@ class ContentApiTest {
 
     @Test
     void seedImagesAreServedAsMedia() throws Exception {
-        String store = mvc.perform(get("/api/store")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.products[0].img", startsWith("/media/seed/")))
-                .andExpect(jsonPath("$.products[0].gallery.length()").value(2))
-                .andExpect(jsonPath("$.collections[0].image", startsWith("/media/seed/")))
-                .andExpect(jsonPath("$.home.hero.image", startsWith("/media/seed/")))
+        String store = mvc.perform(get("/api/v1/store")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.products[0].img", startsWith("/media/seed/")))
+                .andExpect(jsonPath("$.data.products[0].gallery.length()").value(2))
+                .andExpect(jsonPath("$.data.collections[0].image", startsWith("/media/seed/")))
+                .andExpect(jsonPath("$.data.home.hero.image", startsWith("/media/seed/")))
                 .andReturn().getResponse().getContentAsString();
-        String img = json.readTree(store).at("/products/0/img").asText();
+        String img = json.readTree(store).get("data").at("/products/0/img").asText();
         mvc.perform(get(img)).andExpect(status().isOk()).andExpect(content().contentType("image/webp"));
     }
 
     @Test
     void storeHidesNothingWithoutSignIn() throws Exception {
-        mvc.perform(multipart("/api/admin/media").file(new MockMultipartFile("file", "x.png", "image/png", PNG)).with(csrf()))
+        mvc.perform(multipart("/api/v1/admin/media").file(new MockMultipartFile("file", "x.png", "image/png", PNG)).with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(username = "admin@hollispark.local", roles = "ADMIN")
     void uploadChecksTheRealFileType() throws Exception {
-        mvc.perform(multipart("/api/admin/media").file(new MockMultipartFile("file", "evil.png", "image/png", "<svg onload=alert(1)>".getBytes())).with(csrf()))
-                .andExpect(status().isUnprocessableEntity());
-        String res = mvc.perform(multipart("/api/admin/media").file(new MockMultipartFile("file", "shoe.jpg", "image/jpeg", PNG)).param("alt", "Side view").with(csrf()))
+        mvc.perform(multipart("/api/v1/admin/media").file(new MockMultipartFile("file", "evil.png", "image/png", "<svg onload=alert(1)>".getBytes())).with(csrf()))
+                .andExpect(status().isBadRequest());
+        String res = mvc.perform(multipart("/api/v1/admin/media").file(new MockMultipartFile("file", "shoe.jpg", "image/jpeg", PNG)).param("alt", "Side view").with(csrf()))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.contentType").value("image/png"))
-                .andExpect(jsonPath("$.url", startsWith("/media/uploads/")))
+                .andExpect(jsonPath("$.data.contentType").value("image/png"))
+                .andExpect(jsonPath("$.data.url", startsWith("/media/uploads/")))
                 .andReturn().getResponse().getContentAsString();
-        var uploaded = json.readTree(res);
+        var uploaded = json.readTree(res).get("data");
         mvc.perform(get(uploaded.get("url").asText())).andExpect(status().isOk());
 
         // Used on the homepage: cannot be deleted until it is replaced.
-        String home = mvc.perform(get("/api/admin/home")).andReturn().getResponse().getContentAsString();
-        ObjectNode h = (ObjectNode) json.readTree(home);
+        String home = mvc.perform(get("/api/v1/admin/home")).andReturn().getResponse().getContentAsString();
+        ObjectNode h = (ObjectNode) json.readTree(home).get("data");
         String oldImage = h.at("/hero/image").asText();
         ((ObjectNode) h.get("hero")).put("image", uploaded.get("url").asText()).put("title", "Run your own way.");
-        mvc.perform(put("/api/admin/home").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(h.toString()))
+        mvc.perform(put("/api/v1/admin/home").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(h.toString()))
                 .andExpect(status().isOk());
-        mvc.perform(get("/api/store")).andExpect(jsonPath("$.home.hero.title").value("Run your own way."));
-        mvc.perform(delete("/api/admin/media/" + uploaded.get("id").asText()).with(csrf())).andExpect(status().isConflict());
+        mvc.perform(get("/api/v1/store")).andExpect(jsonPath("$.data.home.hero.title").value("Run your own way."));
+        mvc.perform(delete("/api/v1/admin/media/" + uploaded.get("id").asText()).with(csrf())).andExpect(status().isConflict());
 
         ((ObjectNode) h.get("hero")).put("image", oldImage);
-        mvc.perform(put("/api/admin/home").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(h.toString())).andExpect(status().isOk());
-        mvc.perform(delete("/api/admin/media/" + uploaded.get("id").asText()).with(csrf())).andExpect(status().isNoContent());
+        mvc.perform(put("/api/v1/admin/home").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(h.toString())).andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/admin/media/" + uploaded.get("id").asText()).with(csrf())).andExpect(status().isOk());
         mvc.perform(get(uploaded.get("url").asText())).andExpect(status().isNotFound());
     }
 
     @Test
     @WithMockUser(username = "admin@hollispark.local", roles = "ADMIN")
     void collectionsAreEditable() throws Exception {
-        String c = mvc.perform(get("/api/admin/collections/running")).andReturn().getResponse().getContentAsString();
-        ObjectNode n = (ObjectNode) json.readTree(c);
+        String c = mvc.perform(get("/api/v1/admin/collections/running")).andReturn().getResponse().getContentAsString();
+        ObjectNode n = (ObjectNode) json.readTree(c).get("data");
         n.put("tagline", "Daily miles, softer landings.");
-        mvc.perform(put("/api/admin/collections/running").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(n.toString()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.tagline").value("Daily miles, softer landings."));
-        mvc.perform(patch("/api/admin/collections/lifestyle").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
+        mvc.perform(put("/api/v1/admin/collections/running").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(n.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.tagline").value("Daily miles, softer landings."));
+        mvc.perform(patch("/api/v1/admin/collections/lifestyle").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
                 .andExpect(status().isOk());
-        mvc.perform(get("/api/collections")).andExpect(jsonPath("$.length()").value(3));
-        mvc.perform(patch("/api/admin/collections/lifestyle").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"active\":true}"))
+        mvc.perform(get("/api/v1/collections")).andExpect(jsonPath("$.data.length()").value(3));
+        mvc.perform(patch("/api/v1/admin/collections/lifestyle").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"active\":true}"))
                 .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = "staff@hollispark.local", roles = "STAFF")
     void staffCannotChangeContent() throws Exception {
-        mvc.perform(get("/api/admin/collections")).andExpect(status().isOk());
-        mvc.perform(get("/api/admin/media")).andExpect(status().isOk());
-        mvc.perform(put("/api/admin/home").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isForbidden());
-        mvc.perform(multipart("/api/admin/media").file(new MockMultipartFile("file", "x.png", "image/png", PNG)).with(csrf()))
+        mvc.perform(get("/api/v1/admin/collections")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/admin/media")).andExpect(status().isOk());
+        mvc.perform(put("/api/v1/admin/home").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isForbidden());
+        mvc.perform(multipart("/api/v1/admin/media").file(new MockMultipartFile("file", "x.png", "image/png", PNG)).with(csrf()))
                 .andExpect(status().isForbidden());
     }
 }

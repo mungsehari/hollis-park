@@ -56,8 +56,8 @@ export function ProductEdit() {
   const navigate = useNavigate()
   const { can } = useAuth()
   const readOnly = !can("ADMIN")
-  const { data, error: loadError, loading, setData } = useApi<ProductAdmin>(isNew ? null : `/api/admin/products/${id}`)
-  const { data: store } = useApi<StoreInfo>("/api/store")
+  const { data, error: loadError, loading, setData } = useApi<ProductAdmin>(isNew ? null : `/api/v1/admin/products/${id}`)
+  const { data: store } = useApi<StoreInfo>("/api/v1/store")
   const [p, setP] = useState<Product | null>(isNew ? blank() : null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -82,7 +82,7 @@ export function ProductEdit() {
     setError(null)
     try {
       const body = { ...p, img: p.gallery[0] ?? p.img, flag: p.flag || null, context: p.context || null }
-      const res = isNew ? await api.post<ProductAdmin>("/api/admin/products", body) : await api.put<ProductAdmin>(`/api/admin/products/${p.id}`, body)
+      const res = isNew ? await api.post<ProductAdmin>("/api/v1/admin/products", body) : await api.put<ProductAdmin>(`/api/v1/admin/products/${p.id}`, body)
       toast.success(isNew ? `${res.product.name} created` : "Changes saved")
       if (isNew) navigate(`/products/${res.product.id}`, { replace: true })
       else setData(res)
@@ -96,7 +96,7 @@ export function ProductEdit() {
   const toggleActive = async () => {
     if (!data) return
     try {
-      const res = await api.patch<ProductAdmin>(`/api/admin/products/${p.id}`, { active: !data.active })
+      const res = await api.patch<ProductAdmin>(`/api/v1/admin/products/${p.id}`, { active: !data.active })
       setData(res)
       toast.success(res.active ? "Product is live again" : "Product archived and hidden from the store")
     } catch (err) {

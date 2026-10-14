@@ -135,6 +135,14 @@ store:
     region: ${AWS_REGION:ap-south-1}
     public-base-url: ${MEDIA_BASE_URL:/media}
 
+springdoc:
+  api-docs:
+    path: /api/v1/docs
+  swagger-ui:
+    path: /api/v1/docs/ui
+    operations-sorter: alpha
+    tags-sorter: alpha
+
 logging:
   pattern:
     # The request id ties every line to one request (see RequestIdFilter and the X-Request-Id response header).

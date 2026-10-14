@@ -19,7 +19,7 @@ export async function uploadFiles(files: File[], alt?: string): Promise<MediaIte
     if (!ACCEPT.split(",").includes(f.type)) { toast.error(`${f.name}: use a JPG, PNG, WebP or AVIF image.`); continue }
     if (f.size > MAX) { toast.error(`${f.name}: images can be up to 8 MB.`); continue }
     try {
-      out.push(await api.upload<MediaItem>("/api/admin/media", f, alt ? { alt } : {}))
+      out.push(await api.upload<MediaItem>("/api/v1/admin/media", f, alt ? { alt } : {}))
     } catch (err) {
       toast.error(`${f.name}: ${err instanceof ApiError ? err.message : "upload failed"}`)
     }
@@ -67,7 +67,7 @@ export function MediaPicker({ open, onOpenChange, onPick, multiple = false, titl
 }) {
   const [tab, setTab] = useState("library")
   const [chosen, setChosen] = useState<string[]>([])
-  const { data, loading, reload } = useApi<Page<MediaItem>>(open ? "/api/admin/media?size=60" : null)
+  const { data, loading, reload } = useApi<Page<MediaItem>>(open ? "/api/v1/admin/media?size=60" : null)
 
   const toggle = (url: string) => setChosen((c) => (multiple ? (c.includes(url) ? c.filter((x) => x !== url) : [...c, url]) : [url]))
   const confirm = (urls: string[]) => { onPick(urls); setChosen([]); onOpenChange(false) }
@@ -80,16 +80,16 @@ export function MediaPicker({ open, onOpenChange, onPick, multiple = false, titl
           <DialogDescription>Pick from images already uploaded, or add new ones.</DialogDescription>
         </DialogHeader>
         <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
-          <TabsList><TabsTrigger value="library">Library {data ? `(${data.total})` : ""}</TabsTrigger><TabsTrigger value="upload">Upload new</TabsTrigger></TabsList>
+          <TabsList><TabsTrigger value="library">Library {data ? `(${data.totalElements})` : ""}</TabsTrigger><TabsTrigger value="upload">Upload new</TabsTrigger></TabsList>
         </Tabs>
         <div className="-mx-1 max-h-[52svh] overflow-y-auto px-1">
           {tab === "upload" ? (
             <DropZone multiple={multiple} onUploaded={(items) => { reload(); if (multiple) { setChosen(items.map((i) => i.url)); setTab("library") } else confirm([items[0].url]) }} />
           ) : loading && !data ? (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}</div>
-          ) : data && data.items.length ? (
+          ) : data && data.content.length ? (
             <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-              {data.items.map((m) => {
+              {data.content.map((m) => {
                 const on = chosen.includes(m.url)
                 return (
                   <li key={m.id}>

@@ -3,7 +3,8 @@ export type OrderStatus = "PENDING_PAYMENT" | "RECEIVED" | "CONFIRMED" | "SHIPPE
 
 export interface Me { id: string; email: string; name: string; role: Role }
 
-export interface Page<T> { items: T[]; total: number; page: number; size: number }
+/** One page of a list (the API's PaginationDto). */
+export interface Page<T> { content: T[]; pageNumber: number; pageSize: number; totalElements: number; totalPages: number; last: boolean }
 
 export interface OrderSummary {
   id: string; orderNumber: string; name: string; email: string; city: string; items: number

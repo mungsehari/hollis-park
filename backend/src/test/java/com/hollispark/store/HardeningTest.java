@@ -59,40 +59,40 @@ class HardeningTest {
 
     @Test
     void requestIdIsEchoedOrCreated() throws Exception {
-        mvc.perform(get("/api/products").header("X-Request-Id", "trace-12345678"))
+        mvc.perform(get("/api/v1/products").header("X-Request-Id", "trace-12345678"))
                 .andExpect(header().string("X-Request-Id", "trace-12345678"));
-        String generated = mvc.perform(get("/api/products").header("X-Request-Id", "bad id!"))
+        String generated = mvc.perform(get("/api/v1/products").header("X-Request-Id", "bad id!"))
                 .andExpect(status().isOk()).andReturn().getResponse().getHeader("X-Request-Id");
         assertThat(generated).hasSize(36);
     }
 
     @Test
     void errorsCarryTheRequestId() throws Exception {
-        mvc.perform(get("/api/products/nope").header("X-Request-Id", "trace-87654321"))
+        mvc.perform(get("/api/v1/products/nope").header("X-Request-Id", "trace-87654321"))
                 .andExpect(status().isNotFound())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.requestId").value("trace-87654321"));
     }
 
     @Test
     void catalogReadsAreRevalidatedWithEtag() throws Exception {
-        var first = mvc.perform(get("/api/store"))
+        var first = mvc.perform(get("/api/v1/store"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "public, no-cache"))
                 .andExpect(header().exists("ETag"))
                 .andReturn().getResponse();
-        mvc.perform(get("/api/store").header("If-None-Match", first.getHeader("ETag")))
+        mvc.perform(get("/api/v1/store").header("If-None-Match", first.getHeader("ETag")))
                 .andExpect(status().isNotModified());
     }
 
     @Test
     void nonCatalogApiIsNeverCached() throws Exception {
-        mvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized())
+        mvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized())
                 .andExpect(header().string("Cache-Control", "no-store"));
     }
 
     @Test
     void apiSendsSecurityHeaders() throws Exception {
-        mvc.perform(get("/api/products"))
+        mvc.perform(get("/api/v1/products"))
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(header().string("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"))
                 .andExpect(header().string("X-Frame-Options", "DENY"));
@@ -102,10 +102,10 @@ class HardeningTest {
     void repeatedFormPostsAreRateLimited() throws Exception {
         String body = "{\"code\":\"NOPE\"}";
         for (int i = 0; i < 3; i++) {
-            mvc.perform(post("/api/promo/validate").contentType(MediaType.APPLICATION_JSON).content(body))
-                    .andExpect(status().isUnprocessableEntity());
+            mvc.perform(post("/api/v1/promo/validate").contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isBadRequest());
         }
-        mvc.perform(post("/api/promo/validate").contentType(MediaType.APPLICATION_JSON).content(body))
+        mvc.perform(post("/api/v1/promo/validate").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().exists("Retry-After"));
     }

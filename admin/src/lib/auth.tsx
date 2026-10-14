@@ -20,15 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setUnauthorizedHandler(() => setMe(null))
-    api.get<Me>("/api/auth/me").then(setMe).catch(() => setMe(null)).finally(() => setLoading(false))
+    api.get<Me>("/api/v1/auth/me").then(setMe).catch(() => setMe(null)).finally(() => setLoading(false))
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
-    setMe(await api.post<Me>("/api/auth/login", { email, password }))
+    setMe(await api.post<Me>("/api/v1/auth/login", { email, password }))
   }, [])
 
   const logout = useCallback(async () => {
-    await api.post("/api/auth/logout").catch(() => undefined)
+    await api.post("/api/v1/auth/logout").catch(() => undefined)
     setMe(null)
   }, [])
 

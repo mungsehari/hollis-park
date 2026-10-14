@@ -28,11 +28,11 @@ export function Messages() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 })
   const [open, setOpen] = useState<Message | null>(null)
   const { data, error, loading, reload } = useApi<Page<Message>>(
-    `/api/admin/messages${qs({ status: status === "ALL" ? "" : status, page: pagination.pageIndex, size: pagination.pageSize })}`)
+    `/api/v1/admin/messages${qs({ status: status === "ALL" ? "" : status, page: pagination.pageIndex, size: pagination.pageSize })}`)
 
   const mark = async (m: Message, next: "NEW" | "HANDLED") => {
     try {
-      await api.patch(`/api/admin/messages/${m.id}`, { status: next })
+      await api.patch(`/api/v1/admin/messages/${m.id}`, { status: next })
       toast.success(next === "HANDLED" ? "Marked as handled" : "Moved back to new")
       setOpen(null)
       reload()
@@ -61,9 +61,9 @@ export function Messages() {
         <TabsList><TabsTrigger value="NEW">New</TabsTrigger><TabsTrigger value="HANDLED">Handled</TabsTrigger><TabsTrigger value="ALL">All</TabsTrigger></TabsList>
       </Tabs>
       <ErrorNote error={error} />
-      <AdminGrid data={data?.items ?? []} columns={columns} getRowId={(m) => String(m.id)} isLoading={loading && !data} onRowClick={setOpen}
+      <AdminGrid data={data?.content ?? []} columns={columns} getRowId={(m) => String(m.id)} isLoading={loading && !data} onRowClick={setOpen}
         emptyMessage={<Empty icon={<InboxIcon />} title={status === "NEW" ? "Inbox zero" : "No messages"}>{status === "NEW" ? "Every message has been handled." : undefined}</Empty>}
-        server={{ total: data?.total ?? 0, pagination, onPaginationChange: setPagination }} />
+        server={{ total: data?.totalElements ?? 0, pagination, onPaginationChange: setPagination }} />
 
       <Dialog open={!!open} onOpenChange={(o) => { if (!o) setOpen(null) }}>
         <DialogContent className="sm:max-w-lg">
@@ -94,7 +94,7 @@ export function Messages() {
 
 export function Subscribers() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 })
-  const { data, error, loading } = useApi<Page<Subscriber>>(`/api/admin/subscribers${qs({ page: pagination.pageIndex, size: pagination.pageSize })}`)
+  const { data, error, loading } = useApi<Page<Subscriber>>(`/api/v1/admin/subscribers${qs({ page: pagination.pageIndex, size: pagination.pageSize })}`)
   const columns = useMemo<GridColumn<Subscriber>[]>(() => [
     { id: "email", accessorKey: "email", header: ({ column }) => <DataGridColumnHeader column={column} title="Email" />, size: 300 },
     { id: "topics", accessorFn: (s) => s.topics?.join(" "), header: "Interested in", size: 300,
@@ -104,12 +104,12 @@ export function Subscribers() {
   ], [])
   return (
     <>
-      <PageHeader title="Subscribers" description={`${data?.total ?? 0} people get the monthly note.`}
-        actions={<Button variant="outline" nativeButton={false} render={<a href="/api/admin/subscribers.csv" download />}><DownloadIcon />Export CSV</Button>} />
+      <PageHeader title="Subscribers" description={`${data?.totalElements ?? 0} people get the monthly note.`}
+        actions={<Button variant="outline" nativeButton={false} render={<a href="/api/v1/admin/subscribers/export" download />}><DownloadIcon />Export CSV</Button>} />
       <ErrorNote error={error} />
-      <AdminGrid data={data?.items ?? []} columns={columns} getRowId={(s) => String(s.id)} isLoading={loading && !data}
+      <AdminGrid data={data?.content ?? []} columns={columns} getRowId={(s) => String(s.id)} isLoading={loading && !data}
         emptyMessage={<Empty icon={<MailIcon />} title="No subscribers yet" />}
-        server={{ total: data?.total ?? 0, pagination, onPaginationChange: setPagination }} />
+        server={{ total: data?.totalElements ?? 0, pagination, onPaginationChange: setPagination }} />
     </>
   )
 }
@@ -118,13 +118,13 @@ export function Subscribers() {
 
 export function Staff() {
   const { me } = useAuth()
-  const { data, error, loading, reload } = useApi<StaffT[]>("/api/admin/staff")
+  const { data, error, loading, reload } = useApi<StaffT[]>("/api/v1/admin/staff")
   const [adding, setAdding] = useState(false)
   const [resetFor, setResetFor] = useState<StaffT | null>(null)
 
   const update = async (u: StaffT, body: Partial<Pick<StaffT, "role" | "active">>, message: string) => {
     try {
-      await api.patch(`/api/admin/staff/${u.id}`, body)
+      await api.patch(`/api/v1/admin/staff/${u.id}`, body)
       toast.success(message)
       reload()
     } catch (err) {
@@ -178,7 +178,7 @@ function StaffDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenChan
     setBusy(true)
     setError(null)
     try {
-      await api.post("/api/admin/staff", { name: f.get("name"), email: f.get("email"), password: f.get("password"), role })
+      await api.post("/api/v1/admin/staff", { name: f.get("name"), email: f.get("email"), password: f.get("password"), role })
       toast.success("Staff account created. Share the password with them privately.")
       onOpenChange(false)
       onDone()
@@ -224,7 +224,7 @@ function ResetDialog({ user, onClose }: { user: StaffT | null; onClose: () => vo
     if (!user) return
     const f = new FormData(e.currentTarget)
     try {
-      await api.post(`/api/admin/staff/${user.id}/password`, { password: f.get("password") })
+      await api.post(`/api/v1/admin/staff/${user.id}/password`, { password: f.get("password") })
       toast.success(`New password set for ${user.name}`)
       onClose()
     } catch (err) {
