@@ -49,8 +49,21 @@ Parameters:
       Optional. The repository as it appears in the OIDC subject when GitHub uses immutable ids, for example
       mungsehari@171213873/hollis-park@1414216300 (the token subject is then repo:<this>:ref:refs/heads/main).
     AllowedPattern: '([A-Za-z0-9_.@-]+/[A-Za-z0-9_.@-]+)?'
+  DomainName:
+    Type: String
+    Default: ''
+    Description: >
+      Optional. The store's domain, e.g. hollisparkstore.com (bought in Route 53, so its hosted zone exists).
+      When set: HTTPS with a free ACM certificate, HTTP and www redirect to https://DomainName, DNS records,
+      secure cookies. Leave empty for the plain-HTTP load balancer address.
+    AllowedPattern: '([a-z0-9-]+\.)+[a-z]{2,}|'
+  HostedZoneId:
+    Type: String
+    Default: ''
+    Description: Route 53 hosted zone id of DomainName (Route 53 -> Hosted zones). Required when DomainName is set.
 
 Conditions:
+  HasDomain: !Not [!Equals [!Ref DomainName, '']]
   HasGitHub: !Not [!Equals [!Ref GitHubRepo, '']]
   HasGitHubSubject: !Not [!Equals [!Ref GitHubSubject, '']]
 
@@ -207,12 +220,74 @@ Resources:
       LoadBalancerArn: !Ref Alb
       Port: 80
       Protocol: HTTP
+      # With a domain, plain HTTP only redirects to https://DomainName (one canonical address).
+      DefaultActions: !If
+        - HasDomain
+        - [{Type: redirect, RedirectConfig: {Protocol: HTTPS, Port: '443', Host: !Ref DomainName, Path: '/#{path}', Query: '#{query}', StatusCode: HTTP_301}}]
+        - [{Type: forward, TargetGroupArn: !Ref WebTargets}]
+
+  # ------------------------------------------------------------------ domain and HTTPS (only with DomainName)
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: HasDomain
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames: [!Sub 'www.${DomainName}']
+      ValidationMethod: DNS
+      # CloudFormation writes the validation records into the hosted zone and waits until the certificate is issued.
+      DomainValidationOptions:
+        - {DomainName: !Ref DomainName, HostedZoneId: !Ref HostedZoneId}
+        - {DomainName: !Sub 'www.${DomainName}', HostedZoneId: !Ref HostedZoneId}
+  HttpsIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: HasDomain
+    Properties:
+      GroupId: !Ref AlbSg
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 0.0.0.0/0
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: HasDomain
+    Properties:
+      LoadBalancerArn: !Ref Alb
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates: [{CertificateArn: !Ref Certificate}]
       DefaultActions: [{Type: forward, TargetGroupArn: !Ref WebTargets}]
+  WwwToApex:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Condition: HasDomain
+    Properties:
+      ListenerArn: !Ref HttpsListener
+      Priority: 1
+      Conditions: [{Field: host-header, HostHeaderConfig: {Values: [!Sub 'www.${DomainName}']}}]
+      Actions: [{Type: redirect, RedirectConfig: {Protocol: HTTPS, Port: '443', Host: !Ref DomainName, Path: '/#{path}', Query: '#{query}', StatusCode: HTTP_301}}]
+  ApexRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: HasDomain
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget: {DNSName: !GetAtt Alb.DNSName, HostedZoneId: !GetAtt Alb.CanonicalHostedZoneID}
+  WwwRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: HasDomain
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub 'www.${DomainName}'
+      Type: A
+      AliasTarget: {DNSName: !GetAtt Alb.DNSName, HostedZoneId: !GetAtt Alb.CanonicalHostedZoneID}
+
   # Staff pages and sign-in: only from AdminCidr. Everyone else gets 403 (the store itself stays public).
+  # With a domain the rules sit on the HTTPS listener (HTTP only redirects).
   StaffFromOffice:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      ListenerArn: !Ref Listener
+      ListenerArn: !If [HasDomain, !Ref HttpsListener, !Ref Listener]
       Priority: 5
       Conditions:
         - Field: path-pattern
@@ -223,7 +298,7 @@ Resources:
   StaffFromElsewhere:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      ListenerArn: !Ref Listener
+      ListenerArn: !If [HasDomain, !Ref HttpsListener, !Ref Listener]
       Priority: 6
       Conditions:
         - Field: path-pattern
@@ -307,9 +382,9 @@ Resources:
           Environment:
             - {Name: SPRING_PROFILES_ACTIVE, Value: prod}
             - {Name: DB_URL, Value: !Sub 'jdbc:postgresql://${Db.Endpoint.Address}:5432/store?sslmode=require'}
-            - {Name: CORS_ALLOWED_ORIGINS, Value: !Sub 'http://${Alb.DNSName}'}
-            # Plain HTTP for now: a Secure cookie would never be sent back. Set true once HTTPS is added.
-            - {Name: SESSION_COOKIE_SECURE, Value: 'false'}
+            - {Name: CORS_ALLOWED_ORIGINS, Value: !If [HasDomain, !Sub 'https://${DomainName}', !Sub 'http://${Alb.DNSName}']}
+            # Secure cookies only over HTTPS: on plain HTTP the browser would never send them back.
+            - {Name: SESSION_COOKIE_SECURE, Value: !If [HasDomain, 'true', 'false']}
             - {Name: MEDIA_STORAGE, Value: s3}
             - {Name: MEDIA_BUCKET, Value: !Ref MediaBucket}
             - {Name: MEDIA_BASE_URL, Value: /media}
@@ -481,7 +556,7 @@ Resources:
 Outputs:
   SiteUrl:
     Description: Store address (admin is at /admin, from AdminCidr only)
-    Value: !Sub 'http://${Alb.DNSName}'
+    Value: !If [HasDomain, !Sub 'https://${DomainName}', !Sub 'http://${Alb.DNSName}']
   SourceBucketName:
     Value: !Ref SourceBucket
   PipelineName:

@@ -36,6 +36,12 @@ jobs:
         working-directory: backend
         run: mvn -B test
 
+      - name: Frontends only call the versioned API
+        run: |
+          if grep -rn "/api/" store/src admin/src | grep -v "/api/v1/"; then
+            echo "::error::Use /api/v1/... in the store and admin (the unversioned /api paths no longer exist)."; exit 1
+          fi
+
   deploy:
     needs: test
     runs-on: ubuntu-latest

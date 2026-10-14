@@ -112,6 +112,6 @@ export const api = {
 /** Links out to a marketplace. They pass through the store so each click is counted, then redirect. */
 export const go = {
   product: (slug: string, marketplace: "amazon" | "flipkart") =>
-    `${BASE}/api/go/product/${encodeURIComponent(slug)}/${marketplace}`,
-  pick: (id: string) => `${BASE}/api/go/pick/${encodeURIComponent(id)}`,
+    `${BASE}/api/v1/go/product/${encodeURIComponent(slug)}/${marketplace}`,
+  pick: (id: string) => `${BASE}/api/v1/go/pick/${encodeURIComponent(id)}`,
 }
