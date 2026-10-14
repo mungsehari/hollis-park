@@ -2,7 +2,7 @@ package com.hollispark.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.hollispark.store.dto.OrderRequest.ShipMethod;
+import com.hollispark.store.enums.ShipMethod;
 import com.hollispark.store.service.PricingService;
 import com.hollispark.store.service.SettingsService.Settings;
 import java.math.BigDecimal;

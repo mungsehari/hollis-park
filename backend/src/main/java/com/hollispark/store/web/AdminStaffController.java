@@ -1,10 +1,10 @@
 package com.hollispark.store.web;
 
-import com.hollispark.store.domain.StaffUser;
-import com.hollispark.store.dto.AdminDtos.PasswordReset;
-import com.hollispark.store.dto.AdminDtos.StaffCreate;
-import com.hollispark.store.dto.AdminDtos.StaffDto;
-import com.hollispark.store.dto.AdminDtos.StaffUpdate;
+import com.hollispark.store.dto.user.PasswordReset;
+import com.hollispark.store.dto.user.StaffCreate;
+import com.hollispark.store.dto.user.StaffDto;
+import com.hollispark.store.dto.user.StaffUpdate;
+import com.hollispark.store.enums.StaffRole;
 import com.hollispark.store.service.StaffService;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -36,12 +36,12 @@ public class AdminStaffController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public StaffDto create(@Valid @RequestBody StaffCreate req) {
-        return StaffDto.of(staff.create(req.email(), req.name(), StaffUser.Role.valueOf(req.role()), req.password()));
+        return StaffDto.of(staff.create(req.email(), req.name(), StaffRole.valueOf(req.role()), req.password()));
     }
 
     @PatchMapping("/{id}")
     public StaffDto update(@PathVariable UUID id, @Valid @RequestBody StaffUpdate req, Principal who) {
-        StaffUser.Role role = req.role() == null ? null : StaffUser.Role.valueOf(req.role());
+        StaffRole role = req.role() == null ? null : StaffRole.valueOf(req.role());
         return StaffDto.of(staff.update(id, req.name(), role, req.active(), who.getName()));
     }
 

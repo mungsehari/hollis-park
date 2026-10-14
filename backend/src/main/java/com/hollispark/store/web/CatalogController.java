@@ -1,8 +1,8 @@
 package com.hollispark.store.web;
 
-import com.hollispark.store.dto.ContentDtos.CollectionDto;
 import com.hollispark.store.dto.ProductDto;
 import com.hollispark.store.dto.ReviewDto;
+import com.hollispark.store.dto.catalog.CollectionDto;
 import com.hollispark.store.service.ApiException;
 import com.hollispark.store.service.StorefrontService;
 import java.util.List;

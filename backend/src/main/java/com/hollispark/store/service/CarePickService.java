@@ -2,7 +2,7 @@ package com.hollispark.store.service;
 
 import com.hollispark.store.domain.CarePick;
 import com.hollispark.store.domain.CarePickRepository;
-import com.hollispark.store.dto.CarePickDtos.CarePickDto;
+import com.hollispark.store.dto.content.CarePickDto;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

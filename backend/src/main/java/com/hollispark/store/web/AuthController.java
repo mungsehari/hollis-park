@@ -2,9 +2,9 @@ package com.hollispark.store.web;
 
 import com.hollispark.store.domain.StaffUser;
 import com.hollispark.store.domain.StaffUserRepository;
-import com.hollispark.store.dto.AdminDtos.LoginRequest;
-import com.hollispark.store.dto.AdminDtos.Me;
-import com.hollispark.store.dto.AdminDtos.PasswordChange;
+import com.hollispark.store.dto.auth.LoginRequest;
+import com.hollispark.store.dto.auth.Me;
+import com.hollispark.store.dto.auth.PasswordChange;
 import com.hollispark.store.service.ApiException;
 import com.hollispark.store.service.LoginAttempts;
 import jakarta.servlet.http.HttpServletRequest;

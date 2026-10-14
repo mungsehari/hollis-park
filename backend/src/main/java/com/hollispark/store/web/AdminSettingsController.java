@@ -1,9 +1,9 @@
 package com.hollispark.store.web;
 
-import com.hollispark.store.dto.AdminDtos.PromoCreate;
-import com.hollispark.store.dto.AdminDtos.PromoDto;
-import com.hollispark.store.dto.AdminDtos.PromoUpdate;
-import com.hollispark.store.dto.AdminDtos.SettingsDto;
+import com.hollispark.store.dto.marketing.PromoCreate;
+import com.hollispark.store.dto.marketing.PromoDto;
+import com.hollispark.store.dto.marketing.PromoUpdate;
+import com.hollispark.store.dto.settings.SettingsDto;
 import com.hollispark.store.service.PromoService;
 import com.hollispark.store.service.SettingsService;
 import com.hollispark.store.service.StorefrontService;

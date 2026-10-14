@@ -2,6 +2,7 @@ package com.hollispark.store.service;
 
 import com.hollispark.store.domain.StaffUser;
 import com.hollispark.store.domain.StaffUserRepository;
+import com.hollispark.store.enums.StaffRole;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class StaffService {
     }
 
     @Transactional
-    public StaffUser create(String email, String name, StaffUser.Role role, String password) {
+    public StaffUser create(String email, String name, StaffRole role, String password) {
         String normalised = email.trim().toLowerCase();
         if (staff.findByEmailIgnoreCase(normalised).isPresent()) {
             throw new ApiException(HttpStatus.CONFLICT, "Someone already uses this email.");
@@ -39,13 +40,13 @@ public class StaffService {
 
     /** {@code actingEmail} is the signed-in person: nobody may take away their own admin access. */
     @Transactional
-    public StaffUser update(UUID id, String name, StaffUser.Role role, Boolean active, String actingEmail) {
+    public StaffUser update(UUID id, String name, StaffRole role, Boolean active, String actingEmail) {
         StaffUser u = find(id);
         boolean self = u.getEmail().equalsIgnoreCase(actingEmail);
-        boolean losesAdmin = u.getRole() == StaffUser.Role.ADMIN && u.isActive()
-                && ((role != null && role != StaffUser.Role.ADMIN) || Boolean.FALSE.equals(active));
+        boolean losesAdmin = u.getRole() == StaffRole.ADMIN && u.isActive()
+                && ((role != null && role != StaffRole.ADMIN) || Boolean.FALSE.equals(active));
         if (self && losesAdmin) throw new ApiException(HttpStatus.CONFLICT, "You cannot remove your own admin access.");
-        if (losesAdmin && staff.countByRoleAndActiveTrue(StaffUser.Role.ADMIN) <= 1) {
+        if (losesAdmin && staff.countByRoleAndActiveTrue(StaffRole.ADMIN) <= 1) {
             throw new ApiException(HttpStatus.CONFLICT, "The store needs at least one active admin.");
         }
         if (name != null && !name.isBlank()) u.setName(name.trim());

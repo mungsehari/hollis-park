@@ -3,7 +3,7 @@ package com.hollispark.store.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hollispark.store.domain.SiteContent;
 import com.hollispark.store.domain.SiteContentRepository;
-import com.hollispark.store.dto.ContentDtos.HomeContent;
+import com.hollispark.store.dto.content.HomeContent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

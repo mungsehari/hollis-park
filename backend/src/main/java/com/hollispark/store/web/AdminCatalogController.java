@@ -1,15 +1,15 @@
 package com.hollispark.store.web;
 
+import com.hollispark.store.domain.CollectionRepository;
 import com.hollispark.store.domain.Marketplace;
 import com.hollispark.store.domain.Product;
 import com.hollispark.store.domain.ProductRepository;
-import com.hollispark.store.dto.AdminDtos.ActiveUpdate;
-import com.hollispark.store.dto.AdminDtos.ProductAdmin;
 import com.hollispark.store.dto.ProductDto;
+import com.hollispark.store.dto.base.ActiveUpdate;
+import com.hollispark.store.dto.catalog.ProductAdmin;
 import com.hollispark.store.service.ApiException;
-import com.hollispark.store.service.StorefrontService;
-import com.hollispark.store.domain.CollectionRepository;
 import com.hollispark.store.service.StaticContent;
+import com.hollispark.store.service.StorefrontService;
 import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.HashSet;

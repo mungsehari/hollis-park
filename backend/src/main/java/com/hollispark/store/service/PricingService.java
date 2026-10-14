@@ -1,6 +1,6 @@
 package com.hollispark.store.service;
 
-import com.hollispark.store.dto.OrderRequest.ShipMethod;
+import com.hollispark.store.enums.ShipMethod;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import org.springframework.stereotype.Service;

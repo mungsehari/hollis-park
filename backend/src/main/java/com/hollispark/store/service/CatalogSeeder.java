@@ -1,8 +1,8 @@
 package com.hollispark.store.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hollispark.store.config.StoreProperties;
 import com.hollispark.store.domain.CarePick;
 import com.hollispark.store.domain.CarePickRepository;
@@ -19,22 +19,23 @@ import com.hollispark.store.domain.StaffUser;
 import com.hollispark.store.domain.StaffUserRepository;
 import com.hollispark.store.domain.StoreSettings;
 import com.hollispark.store.domain.StoreSettingsRepository;
-import com.hollispark.store.dto.CarePickDtos.CarePickDto;
 import com.hollispark.store.dto.ProductDto;
 import com.hollispark.store.dto.ReviewDto;
+import com.hollispark.store.dto.content.CarePickDto;
+import com.hollispark.store.enums.StaffRole;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -199,7 +200,7 @@ public class CatalogSeeder implements ApplicationRunner {
                 .email(b.email().trim().toLowerCase())
                 .name(b.name() == null || b.name().isBlank() ? "Store owner" : b.name())
                 .passwordHash(encoder.encode(b.password()))
-                .role(StaffUser.Role.ADMIN)
+                .role(StaffRole.ADMIN)
                 .build());
         log.info("Created the first admin account {}", u.getEmail());
     }

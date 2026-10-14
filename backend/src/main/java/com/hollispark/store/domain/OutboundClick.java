@@ -1,5 +1,6 @@
 package com.hollispark.store.domain;
 
+import com.hollispark.store.enums.OutboundTargetType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,11 +20,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
 public class OutboundClick extends BaseEntity {
-    public enum TargetType { PRODUCT, PICK }
-
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type")
-    private TargetType targetType;
+    private OutboundTargetType targetType;
     /** Product slug or care pick id. */
     @Column(name = "target_key")
     private String targetKey;

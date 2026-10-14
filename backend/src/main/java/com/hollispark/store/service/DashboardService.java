@@ -9,7 +9,7 @@ import com.hollispark.store.domain.OrderStatus;
 import com.hollispark.store.domain.OutboundClickRepository;
 import com.hollispark.store.domain.ProductRepository;
 import com.hollispark.store.domain.SubscriberRepository;
-import com.hollispark.store.dto.AdminDtos.OrderSummary;
+import com.hollispark.store.dto.order.OrderSummary;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;

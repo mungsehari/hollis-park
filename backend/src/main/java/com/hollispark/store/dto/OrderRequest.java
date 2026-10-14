@@ -1,6 +1,7 @@
 package com.hollispark.store.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hollispark.store.enums.ShipMethod;
+import com.hollispark.store.enums.Width;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -22,17 +23,6 @@ public record OrderRequest(
         @NotNull ShipMethod ship,
         @Size(max = 40) String promo,
         @NotEmpty @Size(max = 50) List<@Valid Item> items) {
-
-    public enum ShipMethod {
-        @JsonProperty("standard") STANDARD,
-        @JsonProperty("express") EXPRESS,
-        @JsonProperty("pickup") PICKUP
-    }
-
-    public enum Width {
-        @JsonProperty("standard") STANDARD,
-        @JsonProperty("wide") WIDE
-    }
 
     public record Item(
             @NotBlank String id,

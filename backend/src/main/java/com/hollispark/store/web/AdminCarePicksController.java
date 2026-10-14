@@ -1,6 +1,6 @@
 package com.hollispark.store.web;
 
-import com.hollispark.store.dto.CarePickDtos.CarePickDto;
+import com.hollispark.store.dto.content.CarePickDto;
 import com.hollispark.store.service.CarePickService;
 import com.hollispark.store.service.StorefrontService;
 import jakarta.validation.Valid;
