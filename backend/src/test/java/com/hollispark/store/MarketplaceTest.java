@@ -2,7 +2,7 @@ package com.hollispark.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.hollispark.store.domain.Marketplace;
+import com.hollispark.store.enums.Marketplace;
 import org.junit.jupiter.api.Test;
 
 class MarketplaceTest {

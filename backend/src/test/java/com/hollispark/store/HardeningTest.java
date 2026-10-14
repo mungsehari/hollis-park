@@ -7,8 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.hollispark.store.domain.PromoCode;
-import com.hollispark.store.domain.PromoCodeRepository;
+import com.hollispark.store.entity.marketing.PromoCode;
+import com.hollispark.store.repository.marketing.PromoCodeRepository;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;

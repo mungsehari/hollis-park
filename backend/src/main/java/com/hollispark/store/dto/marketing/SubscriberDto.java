@@ -1,6 +1,6 @@
 package com.hollispark.store.dto.marketing;
 
-import com.hollispark.store.domain.Subscriber;
+import com.hollispark.store.entity.marketing.Subscriber;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

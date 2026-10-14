@@ -1,7 +1,7 @@
 package com.hollispark.store.dto.order;
 
-import com.hollispark.store.domain.CustomerOrder;
-import com.hollispark.store.domain.OrderLine;
+import com.hollispark.store.entity.order.CustomerOrder;
+import com.hollispark.store.entity.order.OrderLine;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

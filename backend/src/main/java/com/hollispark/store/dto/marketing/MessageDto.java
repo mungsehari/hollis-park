@@ -1,6 +1,6 @@
 package com.hollispark.store.dto.marketing;
 
-import com.hollispark.store.domain.ContactMessage;
+import com.hollispark.store.entity.marketing.ContactMessage;
 import java.time.Instant;
 import java.util.UUID;
 

@@ -1,6 +1,6 @@
 package com.hollispark.store.dto.user;
 
-import com.hollispark.store.domain.StaffUser;
+import com.hollispark.store.entity.user.StaffUser;
 import java.time.Instant;
 import java.util.UUID;
 

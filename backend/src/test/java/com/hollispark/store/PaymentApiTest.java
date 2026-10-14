@@ -10,8 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hollispark.store.payment.RazorpayClient;
-import com.hollispark.store.payment.Signatures;
+import com.hollispark.store.client.razorpay.RazorpayClient;
+import com.hollispark.store.client.razorpay.RazorpaySignatures;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -89,7 +89,7 @@ class PaymentApiTest {
                         .content(confirmBody(rzp, "pay_FORGED", "0".repeat(64))))
                 .andExpect(status().isUnprocessableEntity());
         mvc.perform(post("/api/orders/" + number + "/payment").contentType(MediaType.APPLICATION_JSON)
-                        .content(confirmBody("order_SOMEONE_ELSE", "pay_1", Signatures.hmacHex("test_secret_123", "order_SOMEONE_ELSE|pay_1"))))
+                        .content(confirmBody("order_SOMEONE_ELSE", "pay_1", RazorpaySignatures.hmacHex("test_secret_123", "order_SOMEONE_ELSE|pay_1"))))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -98,7 +98,7 @@ class PaymentApiTest {
         JsonNode o = order();
         String number = o.get("orderNumber").asText();
         String rzp = o.at("/payment/razorpayOrderId").asText();
-        String sig = Signatures.hmacHex("test_secret_123", rzp + "|pay_OK1");
+        String sig = RazorpaySignatures.hmacHex("test_secret_123", rzp + "|pay_OK1");
         for (int i = 0; i < 2; i++) { // a second delivery changes nothing
             mvc.perform(post("/api/orders/" + number + "/payment").contentType(MediaType.APPLICATION_JSON).content(confirmBody(rzp, "pay_OK1", sig)))
                     .andExpect(status().isOk())
@@ -116,7 +116,7 @@ class PaymentApiTest {
         mvc.perform(post("/api/payments/razorpay/webhook").contentType(MediaType.APPLICATION_JSON).header("X-Razorpay-Signature", "bad").content(body))
                 .andExpect(status().isUnauthorized());
         mvc.perform(post("/api/payments/razorpay/webhook").contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Razorpay-Signature", Signatures.hmacHex("whsec_test_456", body)).content(body))
+                        .header("X-Razorpay-Signature", RazorpaySignatures.hmacHex("whsec_test_456", body)).content(body))
                 .andExpect(status().isOk());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/store")).andExpect(status().isOk());
     }

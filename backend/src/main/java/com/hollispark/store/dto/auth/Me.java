@@ -1,6 +1,6 @@
 package com.hollispark.store.dto.auth;
 
-import com.hollispark.store.domain.StaffUser;
+import com.hollispark.store.entity.user.StaffUser;
 import java.util.UUID;
 
 public record Me(UUID id, String email, String name, String role) {

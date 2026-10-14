@@ -1,6 +1,6 @@
 package com.hollispark.store.dto.content;
 
-import com.hollispark.store.domain.CarePick;
+import com.hollispark.store.entity.content.CarePick;
 import java.util.UUID;
 
 /** Storefront shape: no raw link, the store sends people through the tracked redirect. */

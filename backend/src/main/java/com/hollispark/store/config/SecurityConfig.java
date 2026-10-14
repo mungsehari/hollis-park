@@ -1,6 +1,6 @@
 package com.hollispark.store.config;
 
-import com.hollispark.store.domain.StaffUserRepository;
+import com.hollispark.store.repository.user.StaffUserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.context.annotation.Bean;

@@ -1,6 +1,6 @@
 package com.hollispark.store.dto.marketing;
 
-import com.hollispark.store.domain.PromoCode;
+import com.hollispark.store.entity.marketing.PromoCode;
 import java.math.BigDecimal;
 import java.time.Instant;
 

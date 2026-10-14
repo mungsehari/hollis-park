@@ -1,7 +1,7 @@
 package com.hollispark.store.dto.catalog;
 
-import com.hollispark.store.domain.CollectionEntity;
-import com.hollispark.store.domain.GuideItem;
+import com.hollispark.store.entity.catalog.CollectionEntity;
+import com.hollispark.store.entity.catalog.GuideItem;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;

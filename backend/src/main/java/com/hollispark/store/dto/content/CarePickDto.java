@@ -1,7 +1,7 @@
 package com.hollispark.store.dto.content;
 
-import com.hollispark.store.domain.CarePick;
-import com.hollispark.store.domain.Marketplace;
+import com.hollispark.store.entity.content.CarePick;
+import com.hollispark.store.enums.Marketplace;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

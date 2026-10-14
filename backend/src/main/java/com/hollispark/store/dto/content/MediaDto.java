@@ -1,6 +1,6 @@
 package com.hollispark.store.dto.content;
 
-import com.hollispark.store.domain.Media;
+import com.hollispark.store.entity.content.Media;
 import java.time.Instant;
 import java.util.UUID;
 

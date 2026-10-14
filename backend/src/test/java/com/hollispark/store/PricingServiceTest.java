@@ -3,8 +3,8 @@ package com.hollispark.store;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hollispark.store.enums.ShipMethod;
-import com.hollispark.store.service.PricingService;
-import com.hollispark.store.service.SettingsService.Settings;
+import com.hollispark.store.service.order.PricingService;
+import com.hollispark.store.service.settings.SettingsService.Settings;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 
