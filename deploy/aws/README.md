@@ -23,6 +23,7 @@ fine for a demo and testing, with these limits:
 - **Plain HTTP.** Staff pages (`/admin`, `/api/admin/*`, `/api/auth/*`) are only reachable from the IP address you
   deploy from (`AdminCidr`); everyone else gets a 403. If your IP changes, run `deploy.sh` again, or set
   `ADMIN_CIDR=x.x.x.x/32`.
+  Quickest fix when your IP changes: `aws login`, then `deploy/aws/allow-my-ip.sh`.
 - **Do not take real customer payments or personal data over it.** Razorpay test mode is fine. For real
   customers add a domain and a certificate first (below).
 - No CDN: images and the site are served by the task itself.
